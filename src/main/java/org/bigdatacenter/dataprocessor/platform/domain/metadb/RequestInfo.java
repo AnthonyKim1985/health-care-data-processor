@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * Created by hyuk0 on 2017-06-12.
+ * Created by Anthony Jinhyuk Kim on 2017-06-12.
  */
 @Data
 @NoArgsConstructor

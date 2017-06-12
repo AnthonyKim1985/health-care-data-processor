@@ -7,7 +7,7 @@ import org.bigdatacenter.dataprocessor.platform.domain.metadb.*;
 import java.util.List;
 
 /**
- * Created by hyuk0 on 2017-06-08.
+ * Created by Anthony Jinhyuk Kim on 2017-06-08.
  */
 @Mapper
 public interface MetadbMapper {

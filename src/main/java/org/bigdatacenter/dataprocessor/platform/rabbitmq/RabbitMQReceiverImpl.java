@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Created by hyuk0 on 2017-06-02.
+ * Created by Anthony Jinhyuk Kim on 2017-06-02.
  */
 @Component
 public class RabbitMQReceiverImpl implements RabbitMQReceiver {
@@ -21,12 +21,14 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
 
     @Override
     public void runReceiver(List<ExtractionRequest> extractionRequestList) {
-        logger.info(String.format("%s - extractionRequestList: %s", Thread.currentThread().getName(), extractionRequestList));
+        logger.info(String.format("%s - extractionRequestList: %s",
+                Thread.currentThread().getName(), extractionRequestList));
 
         for (ExtractionRequest extractionRequest : extractionRequestList) {
             long beginTime = System.currentTimeMillis();
             hiveService.extractDataByHiveQL(extractionRequest);
-            logger.info(String.format("%s - Finish Hive Query in dataExtraction: %s, Elapsed time: %d ms", Thread.currentThread().getName(), extractionRequest, (System.currentTimeMillis() - beginTime)));
+            logger.info(String.format("%s - Finish Hive Query in dataExtraction: %s, Elapsed time: %d ms",
+                    Thread.currentThread().getName(), extractionRequest, (System.currentTimeMillis() - beginTime)));
         }
     }
 }

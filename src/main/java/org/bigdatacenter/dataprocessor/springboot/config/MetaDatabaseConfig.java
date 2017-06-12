@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import javax.sql.DataSource;
 
 /**
- * Created by hyuk0 on 2017-06-08.
+ * Created by Anthony Jinhyuk Kim on 2017-06-08.
  */
 @Configuration
 @MapperScan(value = "org.bigdatacenter.dataprocessor.platform.persistence.metadb", sqlSessionFactoryRef = "metadbSqlSessionFactory")

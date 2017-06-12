@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * Created by hyuk0 on 2017-06-08.
+ * Created by Anthony Jinhyuk Kim on 2017-06-08.
  */
 @Service
 public class MetadbService {

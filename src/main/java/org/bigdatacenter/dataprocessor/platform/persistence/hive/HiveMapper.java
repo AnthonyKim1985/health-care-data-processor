@@ -4,7 +4,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
- * Created by hyuk0 on 2017-05-30.
+ * Created by Anthony Jinhyuk Kim on 2017-05-30.
  */
 @Mapper
 public interface HiveMapper {

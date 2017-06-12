@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Created by hyuk0 on 2017-06-02.
+ * Created by Anthony Jinhyuk Kim on 2017-06-02.
  */
 @Configuration
 public class RabbitMQConfig {

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
- * Created by hyuk0 on 2017-05-30.
+ * Created by Anthony Jinhyuk Kim on 2017-05-30.
  */
 @Service
 public class HiveService {
