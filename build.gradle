@@ -1,0 +1,50 @@
+buildscript {
+    ext {
+        springBootVersion = '1.5.3.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+apply plugin: 'war'
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+
+targetCompatibility = 1.7
+sourceCompatibility = 1.7
+
+war {
+    baseName = 'health-care-data-processor'
+    version = '0.0.1-SNAPSHOT'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile('org.springframework.boot:spring-boot-starter-tomcat')
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-jdbc')
+    compile('org.mybatis.spring.boot:mybatis-spring-boot-starter:1.1.1')
+    compile('org.springframework.boot:spring-boot-starter-amqp')
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+
+    compileOnly('org.projectlombok:lombok:1.16.6')
+    compile("com.fasterxml.jackson.core:jackson-databind")
+    runtime('mysql:mysql-connector-java')
+
+    compile('org.apache.hive:hive-jdbc:1.2.1') {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        exclude group: 'org.eclipse.jetty.aggregate', module: 'jetty-all'
+    }
+    compile('org.apache.hadoop:hadoop-common:2.6.4') {
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+
+    }
+}

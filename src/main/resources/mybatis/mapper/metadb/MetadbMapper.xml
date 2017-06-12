@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.bigdatacenter.dataprocessor.platform.persistence.metadb.MetadbMapper">
+    <!-- RequestInfo findRequest(@Param("dataSetUID") Integer dataSetUID) -->
+    <select id="findRequest" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.RequestInfo">
+        SELECT * FROM health_care_ui.bogun_dataset_list WHERE dataSetUid = #{dataSetUID};
+    </select>
+
+    <!-- List<ConditionInfo> findConditions(@Param("dataSetUID") Integer dataSetUID) -->
+    <select id="findConditions" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.ConditionInfo">
+        SELECT * FROM health_care_ui.bogun_dataset_select WHERE dataSetUid = #{dataSetUID};
+    </select>
+
+    <!-- List<ColumnInfo> findColumnInfo(@Param("eclEngName") String eclEngName) -->
+    <select id="findColumnInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.ColumnInfo">
+        SELECT * FROM health_care_ui.extract_col_list WHERE ecl_eng_name like #{eclEngName};
+    </select>
+
+    <!-- TableInfo findTableInfo(@Param("etlIdx") Integer etlIdx) -->
+    <select id="findTableInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.TableInfo">
+        SELECT * FROM health_care_ui.extract_tb_list WHERE etl_idx = #{etlIdx};
+    </select>
+
+    <!-- DatabaseInfo findDatabaseInfo(@Param("edlIdx") Integer edlIdx) -->
+    <select id="findDatabaseInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.DatabaseInfo">
+        SELECT * FROM health_care_ui.extract_db_list WHERE edl_idx = #{edlIdx};
+    </select>
+</mapper>
