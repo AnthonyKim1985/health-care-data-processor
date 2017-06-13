@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by hyuk0 on 2017-06-12.
+ * Created by Anthony Jinhyuk Kim on 2017-06-12.
  */
 public interface HiveQueryResolver {
     Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> buildHiveQueryParameter(Integer dataSetUID);

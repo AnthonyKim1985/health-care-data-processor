@@ -21,13 +21,21 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
 
     @Override
     public void runReceiver(List<ExtractionRequest> extractionRequestList) {
-        logger.info(String.format("%s - extractionRequestList: %s",
-                Thread.currentThread().getName(), extractionRequestList));
+        if (extractionRequestList == null) {
+            logger.error(String.format("%s - Error occurs : extraction request list is null", Thread.currentThread().getName()));
+            return;
+        }
 
-        for (ExtractionRequest extractionRequest : extractionRequestList) {
+        final int size = extractionRequestList.size();
+        for (int i = 0; i < size; i++) {
+            ExtractionRequest extractionRequest = extractionRequestList.get(i);
+            logger.info(String.format("%s - Remaining %d query processing", Thread.currentThread().getName(), (size - i)));
+            logger.info(String.format("%s - Start data extraction at Hive Query: %s", Thread.currentThread().getName(), extractionRequest));
+
             long beginTime = System.currentTimeMillis();
             hiveService.extractDataByHiveQL(extractionRequest);
-            logger.info(String.format("%s - Finish Hive Query in dataExtraction: %s, Elapsed time: %d ms",
+
+            logger.info(String.format("%s - Finish data extraction at Hive Query: %s, Elapsed time: %d ms",
                     Thread.currentThread().getName(), extractionRequest, (System.currentTimeMillis() - beginTime)));
         }
     }
