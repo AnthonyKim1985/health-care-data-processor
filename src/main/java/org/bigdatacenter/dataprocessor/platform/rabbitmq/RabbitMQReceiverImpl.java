@@ -26,17 +26,21 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
             return;
         }
 
+        long jobBeginTime = System.currentTimeMillis();
         final int size = extractionRequestList.size();
         for (int i = 0; i < size; i++) {
             ExtractionRequest extractionRequest = extractionRequestList.get(i);
             logger.info(String.format("%s - Remaining %d query processing", Thread.currentThread().getName(), (size - i)));
             logger.info(String.format("%s - Start data extraction at Hive Query: %s", Thread.currentThread().getName(), extractionRequest));
 
-            long beginTime = System.currentTimeMillis();
+            long queryBeginTime = System.currentTimeMillis();
             hiveService.extractDataByHiveQL(extractionRequest);
 
             logger.info(String.format("%s - Finish data extraction at Hive Query: %s, Elapsed time: %d ms",
-                    Thread.currentThread().getName(), extractionRequest, (System.currentTimeMillis() - beginTime)));
+                    Thread.currentThread().getName(), extractionRequest, (System.currentTimeMillis() - queryBeginTime)));
         }
+
+        logger.info(String.format("%s - All job is done, Elapsed time: %d ms",
+                Thread.currentThread().getName(), (System.currentTimeMillis() - jobBeginTime)));
     }
 }

@@ -123,7 +123,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                     if (isNumeric(value))
                         hiveQueryBuilder.append(String.format("%s = %s", columnName, value));
                     else
-                        hiveQueryBuilder.append(String.format("%s LIKE '%s'", columnName, value));
+                        hiveQueryBuilder.append(String.format("%s = '%s'", columnName, value));
                 } else {
                     hiveQueryBuilder.append('(');
                     for (int valueIndex = 0; valueIndex < values.size(); valueIndex++) {
@@ -131,7 +131,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                         if (isNumeric(value))
                             hiveQueryBuilder.append(String.format("%s = %s", columnName, value));
                         else
-                            hiveQueryBuilder.append(String.format("%s LIKE '%s'", columnName, value));
+                            hiveQueryBuilder.append(String.format("%s = '%s'", columnName, value));
 
                         if (valueIndex < values.size() - 1)
                             hiveQueryBuilder.append(" OR ");
