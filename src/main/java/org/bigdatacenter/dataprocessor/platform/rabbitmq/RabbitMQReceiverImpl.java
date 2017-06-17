@@ -1,12 +1,14 @@
 package org.bigdatacenter.dataprocessor.platform.rabbitmq;
 
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
+import org.bigdatacenter.dataprocessor.platform.resolver.ShellScriptResolver;
 import org.bigdatacenter.dataprocessor.platform.service.hive.HiveService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 /**
@@ -18,6 +20,9 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
 
     @Autowired
     private HiveService hiveService;
+
+    @Autowired
+    private ShellScriptResolver shellScriptResolver;
 
     @Override
     public void runReceiver(List<ExtractionRequest> extractionRequestList) {
@@ -36,9 +41,24 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
             long queryBeginTime = System.currentTimeMillis();
             hiveService.extractDataByHiveQL(extractionRequest);
 
+            //
+            // TODO: Merge Reducer output files in HDFS, download merged file to local file system.
+            //
+            String hdfsLocation = extractionRequest.getHdfsLocation();
+            shellScriptResolver.runReducePartsMerger(hdfsLocation);
+
             logger.info(String.format("%s - Finish data extraction at Hive Query: %s, Elapsed time: %d ms",
                     Thread.currentThread().getName(), extractionRequest, (System.currentTimeMillis() - queryBeginTime)));
+
+            //
+            // TODO: 쿼리 상태를 Meta-DB 에 갱신한다.
+            //
         }
+
+        //
+        // TODO: Archive the extracted data set and finally send the file to FTP server.
+        //
+        shellScriptResolver.runArchiveExtractedDataSet(String.format("archive_%s", new Timestamp(System.currentTimeMillis()).getTime()));
 
         logger.info(String.format("%s - All job is done, Elapsed time: %d ms",
                 Thread.currentThread().getName(), (System.currentTimeMillis() - jobBeginTime)));

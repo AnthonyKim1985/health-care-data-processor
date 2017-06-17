@@ -30,14 +30,6 @@ public class DataExtractionController {
     @Autowired
     private HiveQueryResolver hiveQueryResolver;
 
-//    @RequestMapping(value = "dataExtraction", method = RequestMethod.POST)
-//    public void dataExtraction(@RequestBody ExtractionRequest extractionRequest, HttpServletResponse httpServletResponse) {
-//        logger.info(String.format("%s - Extraction Request: %s", Thread.currentThread().getName(), extractionRequest));
-//
-//        rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, extractionRequest);
-//        httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-//    }
-
     @RequestMapping(value = "dataExtraction", method = RequestMethod.GET)
     public void dataExtraction(@RequestParam Integer dataSetUID, HttpServletResponse httpServletResponse) {
         logger.info(String.format("%s - Extraction data set UID: %d", Thread.currentThread().getName(), dataSetUID));
@@ -49,11 +41,11 @@ public class DataExtractionController {
             List<ExtractionRequest> extractionRequestList = hiveQueryResolver.buildHiveQuery(hiveQueryParameter);
             logger.info(String.format("buildHiveQuery: %s", extractionRequestList));
 
-            if (extractionRequestList == null) {
-                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            } else {
+            if (extractionRequestList != null) {
                 rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, extractionRequestList);
                 httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+            } else {
+                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }
         } else {
             httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
