@@ -44,21 +44,28 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
             //
             // TODO: Merge Reducer output files in HDFS, download merged file to local file system.
             //
-            String hdfsLocation = extractionRequest.getHdfsLocation();
+            final String hdfsLocation = extractionRequest.getHdfsLocation();
             shellScriptResolver.runReducePartsMerger(hdfsLocation);
+
+            //
+            // TODO: Update meta database
+            //
+
 
             logger.info(String.format("%s - Finish data extraction at Hive Query: %s, Elapsed time: %d ms",
                     Thread.currentThread().getName(), extractionRequest, (System.currentTimeMillis() - queryBeginTime)));
-
-            //
-            // TODO: 쿼리 상태를 Meta-DB 에 갱신한다.
-            //
         }
 
         //
         // TODO: Archive the extracted data set and finally send the file to FTP server.
         //
-        shellScriptResolver.runArchiveExtractedDataSet(String.format("archive_%s", new Timestamp(System.currentTimeMillis()).getTime()));
+        final String archiveFileName = String.format("archive_%s", new Timestamp(System.currentTimeMillis()).getTime());
+        final String ftpLocation = "";
+        shellScriptResolver.runArchiveExtractedDataSet(archiveFileName, ftpLocation);
+
+        //
+        // TODO: Update meta database
+        //
 
         logger.info(String.format("%s - All job is done, Elapsed time: %d ms",
                 Thread.currentThread().getName(), (System.currentTimeMillis() - jobBeginTime)));

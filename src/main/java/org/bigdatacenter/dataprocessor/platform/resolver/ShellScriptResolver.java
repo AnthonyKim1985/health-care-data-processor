@@ -6,5 +6,5 @@ package org.bigdatacenter.dataprocessor.platform.resolver;
 public interface ShellScriptResolver {
     void runReducePartsMerger(String hdfsLocation);
 
-    void runArchiveExtractedDataSet(String archiveFileName);
+    void runArchiveExtractedDataSet(String archiveFileName, String ftpLocation);
 }

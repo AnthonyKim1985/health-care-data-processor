@@ -1,6 +1,7 @@
 package org.bigdatacenter.dataprocessor.platform.resolver;
 
-import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -18,12 +19,12 @@ public class ShellScriptResolverImpl implements ShellScriptResolver {
 
     @Override
     public void runReducePartsMerger(String hdfsLocation) {
-        fork(new CommandBuilder().buildReducePartsMerger(hdfsLocation));
+        fork(CommandBuilder.buildReducePartsMerger(hdfsLocation));
     }
 
     @Override
-    public void runArchiveExtractedDataSet(String archiveFileName) {
-        fork(new CommandBuilder().buildArchiveExtractedDataSet(archiveFileName));
+    public void runArchiveExtractedDataSet(String archiveFileName, String ftpLocation) {
+        fork(CommandBuilder.buildArchiveExtractedDataSet(archiveFileName, ftpLocation));
     }
 
     private void fork(String target) {
@@ -42,25 +43,21 @@ public class ShellScriptResolverImpl implements ShellScriptResolver {
         }
     }
 
-    @NoArgsConstructor
-    private class CommandBuilder implements Serializable {
-        String buildReducePartsMerger(String hdfsLocation) {
+    private static class CommandBuilder implements Serializable {
+        static String buildReducePartsMerger(String hdfsLocation) {
             return String.format("sh sh/hdfs-parts-merger.sh %s", hdfsLocation);
         }
 
-        String buildArchiveExtractedDataSet(String archiveFileName) {
-            return String.format("sh sh/archive-data-set.sh %s", archiveFileName);
+        static String buildArchiveExtractedDataSet(String archiveFileName, String ftpLocation) {
+            return String.format("sh sh/archive-data-set.sh %s %s", archiveFileName, ftpLocation);
         }
     }
 
-    private class InputStreamResolver implements Runnable {
+    @Data
+    @AllArgsConstructor
+    private static class InputStreamResolver implements Runnable, Serializable {
         private final String streamName;
         private final InputStream inputStream;
-
-        InputStreamResolver(String streamName, InputStream inputStream) {
-            this.streamName = streamName;
-            this.inputStream = inputStream;
-        }
 
         @Override
         public void run() {
