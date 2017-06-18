@@ -18,13 +18,13 @@ public class RequestInfo implements Serializable {
     private Integer dataSetFID;
     private String siteID;
     private Integer menuID;
-    private String subMenuID;
-    private String lowID;
+    private Integer subMenuID;
+    private Integer lowID;
     private String datasetName;
     private String datasetSubject;
     private String datasetContents;
-    private Integer userID;
-    private Integer groupID;
+    private String userID;
+    private Integer groupUID;
     private Integer linkID;
     private Date signDate;
     private Date processDate;

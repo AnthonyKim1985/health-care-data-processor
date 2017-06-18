@@ -8,5 +8,5 @@ import java.util.List;
  * Created by Anthony Jinhyuk Kim on 2017-06-02.
  */
 public interface RabbitMQReceiver {
-    void runReceiver(List<ExtractionRequest> extractionRequestList);
+    void runReceiver(ExtractionRequest extractionRequest);
 }

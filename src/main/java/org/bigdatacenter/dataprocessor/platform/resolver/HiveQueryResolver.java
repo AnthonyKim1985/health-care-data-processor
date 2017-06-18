@@ -11,5 +11,5 @@ import java.util.List;
 public interface HiveQueryResolver {
     ExtractionParameter buildExtractionParameter(Integer dataSetUID);
 
-    List<ExtractionRequest> buildExtractionRequests(ExtractionParameter extractionParameter);
+    ExtractionRequest buildExtractionRequest(ExtractionParameter extractionParameter);
 }

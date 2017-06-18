@@ -1,6 +1,8 @@
 package org.bigdatacenter.dataprocessor.platform.rabbitmq;
 
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.HiveTask;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.RequestInfo;
 import org.bigdatacenter.dataprocessor.platform.resolver.ShellScriptResolver;
 import org.bigdatacenter.dataprocessor.platform.service.hive.HiveService;
 import org.slf4j.Logger;
@@ -25,26 +27,29 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
     private ShellScriptResolver shellScriptResolver;
 
     @Override
-    public void runReceiver(List<ExtractionRequest> extractionRequestList) {
-        if (extractionRequestList == null) {
+    public void runReceiver(ExtractionRequest extractionRequest) {
+        if (extractionRequest == null) {
             logger.error(String.format("%s - Error occurs : extraction request list is null", Thread.currentThread().getName()));
             return;
         }
 
-        long jobBeginTime = System.currentTimeMillis();
-        final int size = extractionRequestList.size();
-        for (int i = 0; i < size; i++) {
-            ExtractionRequest extractionRequest = extractionRequestList.get(i);
-            logger.info(String.format("%s - Remaining %d query processing", Thread.currentThread().getName(), (size - i)));
+        final RequestInfo requestInfo = extractionRequest.getRequestInfo();
+        final List<HiveTask> hiveTaskList = extractionRequest.getHiveTaskList();
+        final int MaxHiveTasks = hiveTaskList.size();
+
+        final long jobBeginTime = System.currentTimeMillis();
+        for (int i = 0; i < MaxHiveTasks; i++) {
+            HiveTask hiveTask = hiveTaskList.get(i);
+            logger.info(String.format("%s - Remaining %d query processing", Thread.currentThread().getName(), (MaxHiveTasks - i)));
             logger.info(String.format("%s - Start data extraction at Hive Query: %s", Thread.currentThread().getName(), extractionRequest));
 
-            long queryBeginTime = System.currentTimeMillis();
-            hiveService.extractDataByHiveQL(extractionRequest);
+            final long queryBeginTime = System.currentTimeMillis();
+            hiveService.extractDataByHiveQL(hiveTask);
 
             //
             // TODO: Merge Reducer output files in HDFS, download merged file to local file system.
             //
-            final String hdfsLocation = extractionRequest.getHdfsLocation();
+            final String hdfsLocation = hiveTask.getHdfsLocation();
             shellScriptResolver.runReducePartsMerger(hdfsLocation);
 
             //
@@ -59,14 +64,13 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         //
         // TODO: Archive the extracted data set and finally send the file to FTP server.
         //
-        final String archiveFileName = String.format("archive_%s", new Timestamp(System.currentTimeMillis()).getTime());
-        final String ftpLocation = "";
+        final String archiveFileName = String.format("archive_%s", String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
+        final String ftpLocation = String.format("/%s/%s/%s", String.valueOf(requestInfo.getGroupUID()), requestInfo.getUserID(), archiveFileName);
         shellScriptResolver.runArchiveExtractedDataSet(archiveFileName, ftpLocation);
 
         //
         // TODO: Update meta database
         //
-
         logger.info(String.format("%s - All job is done, Elapsed time: %d ms",
                 Thread.currentThread().getName(), (System.currentTimeMillis() - jobBeginTime)));
     }

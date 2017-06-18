@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
-import java.util.List;
 
 /**
  * Created by Anthony Jinhyuk Kim on 2017-05-30.
@@ -35,14 +34,14 @@ public class DataExtractionController {
         logger.info(String.format("%s - Extraction data set UID: %d", Thread.currentThread().getName(), dataSetUID));
 
         ExtractionParameter extractionParameter = hiveQueryResolver.buildExtractionParameter(dataSetUID);
-        logger.info(String.format("extractionParameter: %s", extractionParameter));
+        logger.debug(String.format("extractionParameter: %s", extractionParameter));
 
         if (extractionParameter != null) {
-            List<ExtractionRequest> extractionRequestList = hiveQueryResolver.buildExtractionRequests(extractionParameter);
-            logger.info(String.format("buildExtractionRequests: %s", extractionRequestList));
+            ExtractionRequest extractionRequest = hiveQueryResolver.buildExtractionRequest(extractionParameter);
+            logger.debug(String.format("buildExtractionRequest: %s", extractionRequest));
 
-            if (extractionRequestList != null) {
-                rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, extractionRequestList);
+            if (extractionRequest != null) {
+                rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, extractionRequest);
                 httpServletResponse.setStatus(HttpServletResponse.SC_OK);
             } else {
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);

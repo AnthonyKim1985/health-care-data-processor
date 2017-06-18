@@ -2,6 +2,7 @@ package org.bigdatacenter.dataprocessor.platform.resolver;
 
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.HiveTask;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.*;
 import org.bigdatacenter.dataprocessor.platform.service.metadb.MetadbService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,8 +102,9 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
     }
 
     @Override
-    public List<ExtractionRequest> buildExtractionRequests(ExtractionParameter extractionParameter) {
-        List<ExtractionRequest> extractionRequestList = new ArrayList<>();
+    public ExtractionRequest buildExtractionRequest(ExtractionParameter extractionParameter) {
+        List<HiveTask> hiveTaskList = new ArrayList<>();
+        RequestInfo requestInfo = extractionParameter.getRequestInfo();
         Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = extractionParameter.getParameterMap();
 
         for (String dbAndTableName : parameterMap.keySet()) {
@@ -138,11 +140,13 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                     hiveQueryBuilder.append(" AND ");
             }
 
-            String hdfsLocation = String.format("/tmp/health_care/%s/%s", dbAndTableName, new Timestamp(System.currentTimeMillis()).getTime());
-            extractionRequestList.add(new ExtractionRequest(hdfsLocation, hiveQueryBuilder.toString()));
+            // /tmp/health_care/{dataSetUID}/{dbAndTableName}/{timeStamp} -> 이렇게 수정
+            final String hdfsLocation = String.format("/tmp/health_care/%d/%s/%s/%s", requestInfo.getGroupUID(), requestInfo.getUserID(),
+                    dbAndTableName, String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
+            hiveTaskList.add(new HiveTask(hdfsLocation, hiveQueryBuilder.toString()));
         }
 
-        return extractionRequestList;
+        return new ExtractionRequest(requestInfo, hiveTaskList);
     }
 
     private String getEquality(String columnName, String value) {
@@ -157,7 +161,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
             //noinspection ResultOfMethodCallIgnored
             Double.parseDouble(value);
             return true;
-        } catch (NumberFormatException e1) {
+        } catch (NumberFormatException e) {
             return false;
         }
     }
