@@ -22,7 +22,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
     private MetadbService metadbService;
 
     @Override
-    public ExtractionParameter buildHiveQueryParameter(Integer dataSetUID) {
+    public ExtractionParameter buildExtractionParameter(Integer dataSetUID) {
         List<TaskInfo> taskInfoList = new ArrayList<>();
         Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = new HashMap<>();
 
@@ -101,7 +101,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
     }
 
     @Override
-    public List<ExtractionRequest> buildHiveQuery(ExtractionParameter extractionParameter) {
+    public List<ExtractionRequest> buildExtractionRequests(ExtractionParameter extractionParameter) {
         List<ExtractionRequest> extractionRequestList = new ArrayList<>();
         Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = extractionParameter.getParameterMap();
 

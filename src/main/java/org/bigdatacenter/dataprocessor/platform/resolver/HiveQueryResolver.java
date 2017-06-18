@@ -9,7 +9,7 @@ import java.util.List;
  * Created by Anthony Jinhyuk Kim on 2017-06-12.
  */
 public interface HiveQueryResolver {
-    ExtractionParameter buildHiveQueryParameter(Integer dataSetUID);
+    ExtractionParameter buildExtractionParameter(Integer dataSetUID);
 
-    List<ExtractionRequest> buildHiveQuery(ExtractionParameter extractionParameter);
+    List<ExtractionRequest> buildExtractionRequests(ExtractionParameter extractionParameter);
 }
