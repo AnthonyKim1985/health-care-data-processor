@@ -14,7 +14,7 @@ import java.util.Date;
  * Created by Anthony Jinhyuk Kim on 2017-06-17.
  */
 @Component
-public class ShellScriptResolverImpl implements ShellScriptResolver {
+public final class ShellScriptResolverImpl implements ShellScriptResolver {
     private static final Logger logger = LoggerFactory.getLogger(ShellScriptResolverImpl.class);
 
     @Override
@@ -43,7 +43,7 @@ public class ShellScriptResolverImpl implements ShellScriptResolver {
         }
     }
 
-    private static class CommandBuilder implements Serializable {
+    private static final class CommandBuilder implements Serializable {
         static String buildReducePartsMerger(String hdfsLocation) {
             return String.format("sh sh/hdfs-parts-merger.sh %s", hdfsLocation);
         }
@@ -55,7 +55,7 @@ public class ShellScriptResolverImpl implements ShellScriptResolver {
 
     @Data
     @AllArgsConstructor
-    private static class InputStreamResolver implements Runnable, Serializable {
+    private final class InputStreamResolver implements Runnable, Serializable {
         private final String streamName;
         private final InputStream inputStream;
 

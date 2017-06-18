@@ -1,5 +1,6 @@
 package org.bigdatacenter.dataprocessor.platform.resolver;
 
+import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.*;
 import org.bigdatacenter.dataprocessor.platform.service.metadb.MetadbService;
@@ -21,9 +22,9 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
     private MetadbService metadbService;
 
     @Override
-    public Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> buildHiveQueryParameter(Integer dataSetUID) {
+    public ExtractionParameter buildHiveQueryParameter(Integer dataSetUID) {
         List<TaskInfo> taskInfoList = new ArrayList<>();
-        Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> hiveQueryParameterMap = new HashMap<>();
+        Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = new HashMap<>();
 
         //
         // TODO: dataset_list 에서 dataSetUID 에 해당하는 요청을 찾는다.
@@ -72,7 +73,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
         //
         for (TaskInfo taskInfo : taskInfoList) {
             String parameterKey = String.format("%s.%s", taskInfo.getDatabaseName(), taskInfo.getTableName());
-            Map<String/*column*/, List<String>/*values*/> parameterValue = hiveQueryParameterMap.get(parameterKey);
+            Map<String/*column*/, List<String>/*values*/> parameterValue = parameterMap.get(parameterKey);
 
             List<String> values;
             if (parameterValue == null) {
@@ -82,7 +83,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                 parameterValue = new HashMap<>();
                 parameterValue.put(taskInfo.getColumnName(), values);
 
-                hiveQueryParameterMap.put(parameterKey, parameterValue);
+                parameterMap.put(parameterKey, parameterValue);
             } else {
                 values = parameterValue.get(taskInfo.getColumnName());
 
@@ -96,17 +97,19 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                 }
             }
         }
-        return hiveQueryParameterMap;
+        return new ExtractionParameter(requestInfo, parameterMap);
     }
 
     @Override
-    public List<ExtractionRequest> buildHiveQuery(Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> hiveQueryParameter) {
+    public List<ExtractionRequest> buildHiveQuery(ExtractionParameter extractionParameter) {
         List<ExtractionRequest> extractionRequestList = new ArrayList<>();
-        for (String dbAndTableName : hiveQueryParameter.keySet()) {
+        Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = extractionParameter.getParameterMap();
+
+        for (String dbAndTableName : parameterMap.keySet()) {
             StringBuilder hiveQueryBuilder = new StringBuilder();
             hiveQueryBuilder.append(String.format("SELECT * FROM %s WHERE ", dbAndTableName));
 
-            Map<String/*column*/, List<String>/*values*/> conditionMap = hiveQueryParameter.get(dbAndTableName);
+            Map<String/*column*/, List<String>/*values*/> conditionMap = parameterMap.get(dbAndTableName);
 
             List<String> columnNameList = new ArrayList<>();
             columnNameList.addAll(conditionMap.keySet());
@@ -119,19 +122,11 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                     return null;
 
                 if (values.size() == 1) {
-                    String value = values.get(0);
-                    if (isNumeric(value))
-                        hiveQueryBuilder.append(String.format("%s = %s", columnName, value));
-                    else
-                        hiveQueryBuilder.append(String.format("%s = '%s'", columnName, value));
+                    hiveQueryBuilder.append(getEquality(columnName, values.get(0)));
                 } else {
                     hiveQueryBuilder.append('(');
                     for (int valueIndex = 0; valueIndex < values.size(); valueIndex++) {
-                        String value = values.get(valueIndex);
-                        if (isNumeric(value))
-                            hiveQueryBuilder.append(String.format("%s = %s", columnName, value));
-                        else
-                            hiveQueryBuilder.append(String.format("%s = '%s'", columnName, value));
+                        hiveQueryBuilder.append(getEquality(columnName, values.get(valueIndex)));
 
                         if (valueIndex < values.size() - 1)
                             hiveQueryBuilder.append(" OR ");
@@ -150,8 +145,16 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
         return extractionRequestList;
     }
 
+    private String getEquality(String columnName, String value) {
+        if (isNumeric(value))
+            return String.format("%s = %s", columnName, value);
+
+        return String.format("%s = '%s'", columnName, value);
+    }
+
     private boolean isNumeric(String value) {
         try {
+            //noinspection ResultOfMethodCallIgnored
             Double.parseDouble(value);
             return true;
         } catch (NumberFormatException e1) {

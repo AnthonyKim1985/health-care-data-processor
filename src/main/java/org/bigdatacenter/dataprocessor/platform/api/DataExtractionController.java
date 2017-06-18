@@ -1,5 +1,6 @@
 package org.bigdatacenter.dataprocessor.platform.api;
 
+import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.resolver.HiveQueryResolver;
 import org.bigdatacenter.dataprocessor.springboot.config.RabbitMQConfig;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Anthony Jinhyuk Kim on 2017-05-30.
@@ -34,11 +34,11 @@ public class DataExtractionController {
     public void dataExtraction(@RequestParam Integer dataSetUID, HttpServletResponse httpServletResponse) {
         logger.info(String.format("%s - Extraction data set UID: %d", Thread.currentThread().getName(), dataSetUID));
 
-        Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> hiveQueryParameter = hiveQueryResolver.buildHiveQueryParameter(dataSetUID);
-        logger.info(String.format("hiveQueryParameter: %s", hiveQueryParameter));
+        ExtractionParameter extractionParameter = hiveQueryResolver.buildHiveQueryParameter(dataSetUID);
+        logger.info(String.format("extractionParameter: %s", extractionParameter));
 
-        if (hiveQueryParameter != null) {
-            List<ExtractionRequest> extractionRequestList = hiveQueryResolver.buildHiveQuery(hiveQueryParameter);
+        if (extractionParameter != null) {
+            List<ExtractionRequest> extractionRequestList = hiveQueryResolver.buildHiveQuery(extractionParameter);
             logger.info(String.format("buildHiveQuery: %s", extractionRequestList));
 
             if (extractionRequestList != null) {

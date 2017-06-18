@@ -15,4 +15,5 @@ import java.io.Serializable;
 public class ExtractionRequest implements Serializable {
     private String hdfsLocation;
     private String hiveQuery;
+    /* Add here: userID, groupID, and other information */
 }
