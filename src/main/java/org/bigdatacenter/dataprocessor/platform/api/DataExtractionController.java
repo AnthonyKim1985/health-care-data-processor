@@ -34,11 +34,11 @@ public class DataExtractionController {
         logger.info(String.format("%s - Extraction data set UID: %d", Thread.currentThread().getName(), dataSetUID));
 
         ExtractionParameter extractionParameter = hiveQueryResolver.buildExtractionParameter(dataSetUID);
-        logger.debug(String.format("extractionParameter: %s", extractionParameter));
+        logger.info(String.format("extractionParameter: %s", extractionParameter));
 
         if (extractionParameter != null) {
             ExtractionRequest extractionRequest = hiveQueryResolver.buildExtractionRequest(extractionParameter);
-            logger.debug(String.format("buildExtractionRequest: %s", extractionRequest));
+            logger.info(String.format("buildExtractionRequest: %s", extractionRequest));
 
             if (extractionRequest != null) {
                 rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, extractionRequest);

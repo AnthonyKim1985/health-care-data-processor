@@ -64,7 +64,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         //
         // TODO: Archive the extracted data set and finally send the file to FTP server.
         //
-        final String archiveFileName = String.format("archive_%s", String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
+        final String archiveFileName = String.format("archive_%s_%s", requestInfo.getUserID(), String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
         final String ftpLocation = String.format("/%s/%s/%s", String.valueOf(requestInfo.getGroupUID()), requestInfo.getUserID(), archiveFileName);
         shellScriptResolver.runArchiveExtractedDataSet(archiveFileName, ftpLocation);
 
