@@ -140,7 +140,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                     hiveQueryBuilder.append(" AND ");
             }
 
-            // /tmp/health_care/{dataSetUID}/{dbAndTableName}/{timeStamp} -> 이렇게 수정
+            // /tmp/health_care/{dataSetUID}/{dbAndTableName}/{timeStamp}
             final String hdfsLocation = String.format("/tmp/health_care/%d/%s/%s", requestInfo.getDataSetUID(),
                     dbAndTableName, String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
             hiveTaskList.add(new HiveTask(hdfsLocation, hiveQueryBuilder.toString()));

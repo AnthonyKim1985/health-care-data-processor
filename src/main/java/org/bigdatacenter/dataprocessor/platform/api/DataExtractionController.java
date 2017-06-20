@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 @RequestMapping("/extraction/api")
 public class DataExtractionController {
     private static final Logger logger = LoggerFactory.getLogger(DataExtractionController.class);
+    private final String currentThreadName = Thread.currentThread().getName();
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -31,14 +32,14 @@ public class DataExtractionController {
 
     @RequestMapping(value = "dataExtraction", method = RequestMethod.GET)
     public void dataExtraction(@RequestParam Integer dataSetUID, HttpServletResponse httpServletResponse) {
-        logger.info(String.format("%s - Extraction data set UID: %d", Thread.currentThread().getName(), dataSetUID));
+        logger.info(String.format("%s - Extraction data set UID: %d", currentThreadName, dataSetUID));
 
         ExtractionParameter extractionParameter = hiveQueryResolver.buildExtractionParameter(dataSetUID);
-        logger.info(String.format("extractionParameter: %s", extractionParameter));
+        logger.info(String.format("%s - extractionParameter: %s", currentThreadName, extractionParameter));
 
         if (extractionParameter != null) {
             ExtractionRequest extractionRequest = hiveQueryResolver.buildExtractionRequest(extractionParameter);
-            logger.info(String.format("buildExtractionRequest: %s", extractionRequest));
+            logger.info(String.format("%s - buildExtractionRequest: %s", currentThreadName, extractionRequest));
 
             if (extractionRequest != null) {
                 rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, extractionRequest);

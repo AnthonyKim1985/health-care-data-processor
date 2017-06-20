@@ -19,6 +19,7 @@ import java.util.List;
 @Component
 public class RabbitMQReceiverImpl implements RabbitMQReceiver {
     private static final Logger logger = LoggerFactory.getLogger(RabbitMQReceiverImpl.class);
+    private final String currentThreadName = Thread.currentThread().getName();
 
     @Autowired
     private HiveService hiveService;
@@ -29,7 +30,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
     @Override
     public void runReceiver(ExtractionRequest extractionRequest) {
         if (extractionRequest == null) {
-            logger.error(String.format("%s - Error occurs : extraction request list is null", Thread.currentThread().getName()));
+            logger.error(String.format("%s - Error occurs : extraction request list is null", currentThreadName));
             return;
         }
 
@@ -40,8 +41,8 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         final long jobBeginTime = System.currentTimeMillis();
         for (int i = 0; i < MaxHiveTasks; i++) {
             HiveTask hiveTask = hiveTaskList.get(i);
-            logger.info(String.format("%s - Remaining %d query processing", Thread.currentThread().getName(), (MaxHiveTasks - i)));
-            logger.info(String.format("%s - Start data extraction at Hive Query: %s", Thread.currentThread().getName(), extractionRequest));
+            logger.info(String.format("%s - Remaining %d query processing", currentThreadName, (MaxHiveTasks - i)));
+            logger.info(String.format("%s - Start data extraction at Hive Query: %s", currentThreadName, hiveTask));
 
             final long queryBeginTime = System.currentTimeMillis();
             hiveService.extractDataByHiveQL(hiveTask);
@@ -58,7 +59,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
 
 
             logger.info(String.format("%s - Finish data extraction at Hive Query: %s, Elapsed time: %d ms",
-                    Thread.currentThread().getName(), extractionRequest, (System.currentTimeMillis() - queryBeginTime)));
+                    currentThreadName, hiveTask, (System.currentTimeMillis() - queryBeginTime)));
         }
 
         //
@@ -66,12 +67,15 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         //
         final String archiveFileName = String.format("archive_%s_%s", requestInfo.getUserID(), String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
         final String ftpLocation = String.format("/%s/%s/%s", String.valueOf(requestInfo.getGroupUID()), requestInfo.getUserID(), archiveFileName);
+
+        logger.info(String.format("%s - Start archiving the extracted data set: %s", currentThreadName, archiveFileName));
         shellScriptResolver.runArchiveExtractedDataSet(archiveFileName, ftpLocation);
+        logger.info(String.format("%s - Finish archiving the extracted data set: %s", currentThreadName, archiveFileName));
 
         //
         // TODO: Update meta database
         //
         logger.info(String.format("%s - All job is done, Elapsed time: %d ms",
-                Thread.currentThread().getName(), (System.currentTimeMillis() - jobBeginTime)));
+                currentThreadName, (System.currentTimeMillis() - jobBeginTime)));
     }
 }

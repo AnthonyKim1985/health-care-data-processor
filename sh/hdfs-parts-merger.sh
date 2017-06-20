@@ -19,7 +19,7 @@ hive -e "set hive.cli.print.header=false; show columns in ${dbTableName};" > ${d
 # Insert header to the Data Set
 sed -i ':a;N;$!ba;s/\n/,/g' ${dirName}/header # replace newline character to comman(,)
 header=`cat ${dirName}/header | sed -r 's/\s+//g'`
-echo $header
+echo ${header}
 sed -i -e '1i'${header}'\' ${dirName}/${dataFileName}.csv
 
 # Remove header temp file
