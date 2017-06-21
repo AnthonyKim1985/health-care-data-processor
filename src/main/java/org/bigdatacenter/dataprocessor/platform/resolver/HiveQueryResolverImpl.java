@@ -1,5 +1,6 @@
 package org.bigdatacenter.dataprocessor.platform.resolver;
 
+import org.bigdatacenter.dataprocessor.common.DataProcessorUtil;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.HiveTask;
@@ -32,10 +33,16 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
         //
         RequestInfo requestInfo = metadbService.findRequest(dataSetUID);
 
+        if (requestInfo == null)
+            return null;
+
         //
         // TODO: dataset_select DB 에서 dataSetUID 에 해당하는 조건 리스트를 찾는다.
         //
         List<ConditionInfo> conditionInfoList = metadbService.findConditions(dataSetUID);
+
+        if (conditionInfoList == null)
+            return null;
 
         for (ConditionInfo conditionInfo : conditionInfoList) {
             //
@@ -150,19 +157,9 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
     }
 
     private String getEquality(String columnName, String value) {
-        if (isNumeric(value))
+        if (DataProcessorUtil.isNumeric(value))
             return String.format("%s = %s", columnName, value);
 
         return String.format("%s = '%s'", columnName, value);
-    }
-
-    private boolean isNumeric(String value) {
-        try {
-            //noinspection ResultOfMethodCallIgnored
-            Double.parseDouble(value);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
     }
 }

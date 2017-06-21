@@ -1,5 +1,6 @@
 package org.bigdatacenter.dataprocessor.platform.api;
 
+import org.bigdatacenter.dataprocessor.common.DataProcessorUtil;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.resolver.HiveQueryResolver;
@@ -31,10 +32,15 @@ public class DataExtractionController {
     private HiveQueryResolver hiveQueryResolver;
 
     @RequestMapping(value = "dataExtraction", method = RequestMethod.GET)
-    public void dataExtraction(@RequestParam Integer dataSetUID, HttpServletResponse httpServletResponse) {
-        logger.info(String.format("%s - Extraction data set UID: %d", currentThreadName, dataSetUID));
+    public void dataExtraction(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
+        logger.info(String.format("%s - Extraction data set UID: %s", currentThreadName, dataSetUID));
 
-        ExtractionParameter extractionParameter = hiveQueryResolver.buildExtractionParameter(dataSetUID);
+        if (!DataProcessorUtil.isNumeric(dataSetUID)) {
+            httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        ExtractionParameter extractionParameter = hiveQueryResolver.buildExtractionParameter(Integer.parseInt(dataSetUID));
         logger.info(String.format("%s - extractionParameter: %s", currentThreadName, extractionParameter));
 
         if (extractionParameter != null) {

@@ -30,14 +30,13 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
 
     @Override
     public void runReceiver(ExtractionRequest extractionRequest) {
-        if (extractionRequest == null) {
+        if (!validateRequest(extractionRequest)) {
             logger.error(String.format("%s - Error occurs : extraction request list is null", currentThreadName));
             return;
         }
 
         final RequestInfo requestInfo = extractionRequest.getRequestInfo();
         final List<HiveTask> hiveTaskList = extractionRequest.getHiveTaskList();
-
 
         final long jobBeginTime = System.currentTimeMillis();
 
@@ -47,6 +46,15 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         runArchiveTask(requestInfo);
 
         logger.info(String.format("%s - All job is done, Elapsed time: %d ms", currentThreadName, (System.currentTimeMillis() - jobBeginTime)));
+    }
+
+    private boolean validateRequest(ExtractionRequest extractionRequest) {
+        if (extractionRequest == null)
+            return false;
+        else if (extractionRequest.getHiveTaskList().size() == 0)
+            return false;
+
+        return true;
     }
 
     private void runQueryTask(List<HiveTask> hiveTaskList) {

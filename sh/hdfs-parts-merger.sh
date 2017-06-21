@@ -14,7 +14,7 @@ fi
 hdfs dfs -getmerge ${hdfsLocation}/* ${dirName}/${dataFileName}.csv
 
 # Extract the Data Set Header
-hive -e "set hive.cli.print.header=false; show columns in ${dbTableName};" > ${dirName}/header
+ssh -lhadoop nn1 "hive -e \"set hive.cli.print.header=false; show columns in ${dbTableName};\"" > ${dirName}/header
 
 # Insert header to the Data Set
 sed -i ':a;N;$!ba;s/\n/,/g' ${dirName}/header # replace newline character to comman(,)
