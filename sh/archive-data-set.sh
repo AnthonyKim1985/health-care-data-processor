@@ -15,5 +15,9 @@ find ${datasetDirName}/* -size 0 -exec rm -rf {} \;
 cd ${datasetDirName}
 zip ${dirName}/${archiveFileName}.zip ./*.csv
 
+# Delete uncompressed raw data set
+rm -rf ${datasetDirName}/*
+
 # TODO: send the archived data to ftp server
 echo Need to ftp server information.
+echo ${ftpLocation}
