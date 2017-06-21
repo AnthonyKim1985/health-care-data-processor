@@ -27,6 +27,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
     @Autowired
     private ShellScriptResolver shellScriptResolver;
 
+
     @Override
     public void runReceiver(ExtractionRequest extractionRequest) {
         if (extractionRequest == null) {
@@ -36,9 +37,20 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
 
         final RequestInfo requestInfo = extractionRequest.getRequestInfo();
         final List<HiveTask> hiveTaskList = extractionRequest.getHiveTaskList();
-        final int MaxHiveTasks = hiveTaskList.size();
+
 
         final long jobBeginTime = System.currentTimeMillis();
+
+        logger.info(String.format("%s - Start RabbitMQ Message Receiver task", currentThreadName));
+
+        runQueryTask(hiveTaskList);
+        runArchiveTask(requestInfo);
+
+        logger.info(String.format("%s - All job is done, Elapsed time: %d ms", currentThreadName, (System.currentTimeMillis() - jobBeginTime)));
+    }
+
+    private void runQueryTask(List<HiveTask> hiveTaskList) {
+        final int MaxHiveTasks = hiveTaskList.size();
         for (int i = 0; i < MaxHiveTasks; i++) {
             HiveTask hiveTask = hiveTaskList.get(i);
             logger.info(String.format("%s - Remaining %d query processing", currentThreadName, (MaxHiveTasks - i)));
@@ -58,24 +70,25 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
             //
 
 
-            logger.info(String.format("%s - Finish data extraction at Hive Query: %s, Elapsed time: %d ms",
-                    currentThreadName, hiveTask, (System.currentTimeMillis() - queryBeginTime)));
+            logger.info(String.format("%s - Finish data extraction at Hive Query: %s, Elapsed time: %d ms", currentThreadName, hiveTask, (System.currentTimeMillis() - queryBeginTime)));
         }
+    }
 
+    private void runArchiveTask(RequestInfo requestInfo) {
         //
         // TODO: Archive the extracted data set and finally send the file to FTP server.
         //
         final String archiveFileName = String.format("archive_%s_%s", requestInfo.getUserID(), String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
         final String ftpLocation = String.format("/%s/%s/%s", String.valueOf(requestInfo.getGroupUID()), requestInfo.getUserID(), archiveFileName);
 
+        final long archiveFileBeginTime = System.currentTimeMillis();
         logger.info(String.format("%s - Start archiving the extracted data set: %s", currentThreadName, archiveFileName));
         shellScriptResolver.runArchiveExtractedDataSet(archiveFileName, ftpLocation);
-        logger.info(String.format("%s - Finish archiving the extracted data set: %s", currentThreadName, archiveFileName));
+        logger.info(String.format("%s - Finish archiving the extracted data set: %s, Elapsed time: %d ms", currentThreadName, archiveFileName, (System.currentTimeMillis() - archiveFileBeginTime)));
 
         //
         // TODO: Update meta database
         //
-        logger.info(String.format("%s - All job is done, Elapsed time: %d ms",
-                currentThreadName, (System.currentTimeMillis() - jobBeginTime)));
+
     }
 }
