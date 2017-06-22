@@ -13,7 +13,8 @@ fi
 
 find ${datasetDirName}/* -size 0 -exec rm -rf {} \;
 cd ${datasetDirName}
-zip ${dirName}/${archiveFileName}.zip ./*.csv
+#zip ${dirName}/${archiveFileName}.zip ./*.csv
+tar zcvf ${dirName}/${archiveFileName}.tar.gz ./*.csv
 
 # Delete uncompressed raw data set
 rm -rf ${datasetDirName}/*
