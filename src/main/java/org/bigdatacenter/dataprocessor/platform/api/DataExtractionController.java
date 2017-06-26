@@ -5,6 +5,7 @@ import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.resolver.HiveQueryResolver;
 import org.bigdatacenter.dataprocessor.springboot.config.RabbitMQConfig;
+import org.bigdatacenter.dataprocessor.springboot.exception.RestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 @RestController
 @RequestMapping("/extraction/api")
 public class DataExtractionController {
+    private static final String BAD_REQUEST_MESSAGE = "Invalid request: %s";
     private static final Logger logger = LoggerFactory.getLogger(DataExtractionController.class);
     private final String currentThreadName = Thread.currentThread().getName();
 
@@ -33,29 +35,21 @@ public class DataExtractionController {
 
     @RequestMapping(value = "dataExtraction", method = RequestMethod.GET)
     public void dataExtraction(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
-        if (!DataProcessorUtil.isNumeric(dataSetUID)) {
-            logger.warn(String.format("%s - Invalid dataSetUID: %s", currentThreadName, dataSetUID));
-            httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-
+        if (!DataProcessorUtil.isNumeric(dataSetUID))
+            throw new RestException(String.format(BAD_REQUEST_MESSAGE, "dataSetUID is not numeric."), httpServletResponse);
         logger.info(String.format("%s - Extraction data set UID: %s", currentThreadName, dataSetUID));
 
         ExtractionParameter extractionParameter = hiveQueryResolver.buildExtractionParameter(Integer.parseInt(dataSetUID));
+        if (extractionParameter == null)
+            throw new RestException(String.format(BAD_REQUEST_MESSAGE, "extractionParameter is null."), httpServletResponse);
         logger.info(String.format("%s - extractionParameter: %s", currentThreadName, extractionParameter));
 
-        if (extractionParameter != null) {
-            ExtractionRequest extractionRequest = hiveQueryResolver.buildExtractionRequest(extractionParameter);
-            logger.info(String.format("%s - buildExtractionRequest: %s", currentThreadName, extractionRequest));
+        ExtractionRequest extractionRequest = hiveQueryResolver.buildExtractionRequest(extractionParameter);
+        if (extractionRequest == null)
+            throw new RestException(String.format(BAD_REQUEST_MESSAGE, "extractionRequest is null."), httpServletResponse);
+        logger.info(String.format("%s - buildExtractionRequest: %s", currentThreadName, extractionRequest));
 
-            if (extractionRequest != null) {
-                rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, extractionRequest);
-                httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-            } else {
-                httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            }
-        } else {
-            httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        }
+        rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, extractionRequest);
+        httpServletResponse.setStatus(HttpServletResponse.SC_OK);
     }
 }
