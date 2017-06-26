@@ -91,7 +91,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         //
         // TODO: Archive the extracted data set and finally send the file to FTP server.
         //
-        final String archiveFileName = String.format("archive_%s_%s", requestInfo.getUserID(), String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
+        final String archiveFileName = String.format("archive_%s_%s.tar.gz", requestInfo.getUserID(), String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
         final String ftpLocation = String.format("/%s/%s", requestInfo.getUserID(), requestInfo.getDatasetName());
 
         final long archiveFileBeginTime = System.currentTimeMillis();
@@ -102,6 +102,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         //
         // TODO: Update meta database
         //
-        metadbService.insertFtpRequest(new FtpInfo(requestInfo.getDataSetUID(), requestInfo.getUserID(), ftpLocation));
+        final String ftpURI = String.format("%s/%s", ftpLocation, archiveFileName);
+        metadbService.insertFtpRequest(new FtpInfo(requestInfo.getDataSetUID(), requestInfo.getUserID(), ftpURI));
     }
 }
