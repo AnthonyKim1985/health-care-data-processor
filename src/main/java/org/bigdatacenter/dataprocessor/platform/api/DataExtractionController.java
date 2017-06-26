@@ -33,12 +33,13 @@ public class DataExtractionController {
 
     @RequestMapping(value = "dataExtraction", method = RequestMethod.GET)
     public void dataExtraction(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
-        logger.info(String.format("%s - Extraction data set UID: %s", currentThreadName, dataSetUID));
-
         if (!DataProcessorUtil.isNumeric(dataSetUID)) {
+            logger.warn(String.format("%s - Invalid dataSetUID: %s", currentThreadName, dataSetUID));
             httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
+
+        logger.info(String.format("%s - Extraction data set UID: %s", currentThreadName, dataSetUID));
 
         ExtractionParameter extractionParameter = hiveQueryResolver.buildExtractionParameter(Integer.parseInt(dataSetUID));
         logger.info(String.format("%s - extractionParameter: %s", currentThreadName, extractionParameter));

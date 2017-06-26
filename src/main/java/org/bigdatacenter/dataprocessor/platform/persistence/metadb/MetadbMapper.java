@@ -11,13 +11,24 @@ import java.util.List;
  */
 @Mapper
 public interface MetadbMapper {
-    RequestInfo findRequest(@Param("dataSetUID") Integer dataSetUID);
+    //
+    // Bogun Database
+    //
+    RequestInfo readRequest(@Param("dataSetUID") Integer dataSetUID);
 
-    List<ConditionInfo> findConditions(@Param("dataSetUID") Integer dataSetUID);
+    List<ConditionInfo> readConditions(@Param("dataSetUID") Integer dataSetUID);
 
-    List<ColumnInfo> findColumnInfo(@Param("eclEngName") String eclEngName);
+    //
+    // Extraction Database
+    //
+    List<ColumnInfo> readColumnInfo(@Param("eclEngName") String eclEngName);
 
-    TableInfo findTableInfo(@Param("etlIdx") Integer etlIdx);
+    TableInfo readTableInfo(@Param("etlIdx") Integer etlIdx);
 
-    DatabaseInfo findDatabaseInfo(@Param("edlIdx") Integer edlIdx);
+    DatabaseInfo readDatabaseInfo(@Param("edlIdx") Integer edlIdx);
+
+    //
+    // FTP Request Meta Database
+    //
+    void createFtpRequest(@Param("ftpInfo") FtpInfo ftpInfo);
 }

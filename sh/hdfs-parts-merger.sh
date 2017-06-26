@@ -7,7 +7,7 @@ dataFileName=`echo ${hdfsLocation} | cut -d'/' -f5 | cut -d'.' -f2`
 dirName=/home/hadoop/hyuk0628/health-care-service/extracted_dataset
 
 if ! test -d ${dirName}  ; then
-    mkdir ${dirName}
+    mkdir -p ${dirName}
 fi
 
 # Extract Data Set with merging parts files

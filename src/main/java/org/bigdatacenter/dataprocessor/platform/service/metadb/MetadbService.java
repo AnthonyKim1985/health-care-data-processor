@@ -16,22 +16,26 @@ public class MetadbService {
     private MetadbMapper metadbMapper;
 
     public RequestInfo findRequest(Integer dataSetUID) {
-        return metadbMapper.findRequest(dataSetUID);
+        return metadbMapper.readRequest(dataSetUID);
     }
 
     public List<ConditionInfo> findConditions(Integer dataSetUID) {
-        return metadbMapper.findConditions(dataSetUID);
+        return metadbMapper.readConditions(dataSetUID);
     }
 
     public List<ColumnInfo> findColumnInfo(String eclEngName) {
-        return metadbMapper.findColumnInfo(eclEngName);
+        return metadbMapper.readColumnInfo(eclEngName);
     }
 
     public TableInfo findTableInfo(Integer etlIdx) {
-        return metadbMapper.findTableInfo(etlIdx);
+        return metadbMapper.readTableInfo(etlIdx);
     }
 
     public DatabaseInfo findDatabaseInfo(Integer edlIdx) {
-        return metadbMapper.findDatabaseInfo(edlIdx);
+        return metadbMapper.readDatabaseInfo(edlIdx);
+    }
+
+    public void insertFtpRequest(FtpInfo ftpInfo) {
+        metadbMapper.createFtpRequest(ftpInfo);
     }
 }

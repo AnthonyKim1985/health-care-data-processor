@@ -2,9 +2,11 @@ package org.bigdatacenter.dataprocessor.platform.rabbitmq;
 
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.HiveTask;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.FtpInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.RequestInfo;
 import org.bigdatacenter.dataprocessor.platform.resolver.ShellScriptResolver;
 import org.bigdatacenter.dataprocessor.platform.service.hive.HiveService;
+import org.bigdatacenter.dataprocessor.platform.service.metadb.MetadbService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,9 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
 
     @Autowired
     private HiveService hiveService;
+
+    @Autowired
+    private MetadbService metadbService;
 
     @Autowired
     private ShellScriptResolver shellScriptResolver;
@@ -74,7 +79,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
             shellScriptResolver.runReducePartsMerger(hdfsLocation);
 
             //
-            // TODO: Update meta database
+            // TODO: Update transaction database
             //
 
 
@@ -87,7 +92,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         // TODO: Archive the extracted data set and finally send the file to FTP server.
         //
         final String archiveFileName = String.format("archive_%s_%s", requestInfo.getUserID(), String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
-        final String ftpLocation = String.format("/%s/%s/%s", String.valueOf(requestInfo.getGroupUID()), requestInfo.getUserID(), archiveFileName);
+        final String ftpLocation = String.format("/%s/%s", requestInfo.getUserID(), requestInfo.getDatasetName());
 
         final long archiveFileBeginTime = System.currentTimeMillis();
         logger.info(String.format("%s - Start archiving the extracted data set: %s", currentThreadName, archiveFileName));
@@ -97,6 +102,6 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         //
         // TODO: Update meta database
         //
-
+        metadbService.insertFtpRequest(new FtpInfo(requestInfo.getDataSetUID(), requestInfo.getUserID(), ftpLocation));
     }
 }
