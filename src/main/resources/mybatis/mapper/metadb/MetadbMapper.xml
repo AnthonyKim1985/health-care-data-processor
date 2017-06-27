@@ -31,4 +31,9 @@
         INSERT INTO health_care_ui.ftp_request_meta (dataSetUID, userID, ftpURI)
         VALUES (#{ftpInfo.dataSetUID}, #{ftpInfo.userID}, #{ftpInfo.ftpURI});
     </insert>
+
+    <!-- FtpInfo readFtpRequest(@Param("dataSetUID") Integer dataSetUID) -->
+    <select id="readFtpRequest" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.FtpInfo">
+        SELECT * FROM health_care_ui.ftp_request_meta WHERE dataSetUID = #{dataSetUID};
+    </select>
 </mapper>

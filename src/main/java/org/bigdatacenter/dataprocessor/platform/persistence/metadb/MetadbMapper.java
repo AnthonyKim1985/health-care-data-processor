@@ -31,4 +31,6 @@ public interface MetadbMapper {
     // FTP Request Meta Database
     //
     void createFtpRequest(@Param("ftpInfo") FtpInfo ftpInfo);
+
+    FtpInfo readFtpRequest(@Param("dataSetUID") Integer dataSetUID);
 }

@@ -38,4 +38,8 @@ public class MetadbService {
     public void insertFtpRequest(FtpInfo ftpInfo) {
         metadbMapper.createFtpRequest(ftpInfo);
     }
+
+    public boolean isExecutedJob(Integer dataSetUID) {
+        return metadbMapper.readFtpRequest(dataSetUID) != null;
+    }
 }
