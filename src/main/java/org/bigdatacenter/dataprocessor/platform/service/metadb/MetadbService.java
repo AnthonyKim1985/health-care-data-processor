@@ -1,45 +1,24 @@
 package org.bigdatacenter.dataprocessor.platform.service.metadb;
 
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.*;
-import org.bigdatacenter.dataprocessor.platform.persistence.metadb.MetadbMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 /**
  * Created by Anthony Jinhyuk Kim on 2017-06-08.
  */
-@Service
-public class MetadbService {
-    @Autowired
-    private MetadbMapper metadbMapper;
+public interface MetadbService {
+    RequestInfo findRequest(Integer dataSetUID);
 
-    public RequestInfo findRequest(Integer dataSetUID) {
-        return metadbMapper.readRequest(dataSetUID);
-    }
+    List<ConditionInfo> findConditions(Integer dataSetUID);
 
-    public List<ConditionInfo> findConditions(Integer dataSetUID) {
-        return metadbMapper.readConditions(dataSetUID);
-    }
+    List<ColumnInfo> findColumnInfo(String eclEngName);
 
-    public List<ColumnInfo> findColumnInfo(String eclEngName) {
-        return metadbMapper.readColumnInfo(eclEngName);
-    }
+    TableInfo findTableInfo(Integer etlIdx);
 
-    public TableInfo findTableInfo(Integer etlIdx) {
-        return metadbMapper.readTableInfo(etlIdx);
-    }
+    DatabaseInfo findDatabaseInfo(Integer edlIdx);
 
-    public DatabaseInfo findDatabaseInfo(Integer edlIdx) {
-        return metadbMapper.readDatabaseInfo(edlIdx);
-    }
+    void insertFtpRequest(FtpInfo ftpInfo);
 
-    public void insertFtpRequest(FtpInfo ftpInfo) {
-        metadbMapper.createFtpRequest(ftpInfo);
-    }
-
-    public boolean isExecutedJob(Integer dataSetUID) {
-        return metadbMapper.readFtpRequest(dataSetUID) != null;
-    }
+    boolean isExecutedJob(Integer dataSetUID);
 }
