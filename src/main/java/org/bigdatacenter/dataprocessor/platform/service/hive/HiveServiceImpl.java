@@ -15,6 +15,6 @@ public class HiveServiceImpl implements HiveService {
 
     @Override
     public void extractDataByHiveQL(HiveTask hiveTask) {
-        hiveMapper.extractDataByHiveQL(hiveTask.getHdfsLocation(), hiveTask.getHiveQuery());
+        hiveMapper.extractDataByHiveQL(hiveTask);
     }
 }
