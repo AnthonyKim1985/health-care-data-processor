@@ -37,6 +37,9 @@ public class DataExtractionController {
     @Autowired
     private HiveQueryResolver hiveQueryResolver;
 
+    //
+    // TODO: Health Care Data Extraction API
+    //
     @RequestMapping(value = "dataExtraction", method = RequestMethod.GET)
     public void dataExtraction(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
         if (!DataProcessorUtil.isNumeric(dataSetUID))
@@ -60,4 +63,9 @@ public class DataExtractionController {
         rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, extractionRequest);
         httpServletResponse.setStatus(HttpServletResponse.SC_OK);
     }
+
+    //
+    // TODO: Health Care Scenario API
+    //
+
 }
