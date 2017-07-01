@@ -3,7 +3,7 @@ package org.bigdatacenter.dataprocessor.platform.api;
 import org.bigdatacenter.dataprocessor.common.DataProcessorUtil;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
-import org.bigdatacenter.dataprocessor.platform.resolver.HiveQueryResolver;
+import org.bigdatacenter.dataprocessor.platform.resolver.QueryResolver;
 import org.bigdatacenter.dataprocessor.platform.service.metadb.MetadbService;
 import org.bigdatacenter.dataprocessor.springboot.config.RabbitMQConfig;
 import org.bigdatacenter.dataprocessor.springboot.exception.RestException;
@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,7 +36,8 @@ public class DataExtractionController {
     private MetadbService metadbService;
 
     @Autowired
-    private HiveQueryResolver hiveQueryResolver;
+    @Qualifier("HiveQueryResolverImplVersion2")
+    private QueryResolver queryResolver;
 
     //
     // TODO: Health Care Data Extraction API
@@ -50,12 +52,12 @@ public class DataExtractionController {
             throw new RestException(String.format(BAD_REQUEST_MESSAGE, String.format("dataSetUID \"%s\" has already been executed.", dataSetUID)), httpServletResponse);
         logger.info(String.format("%s - dataSetUID: %s", currentThreadName, dataSetUID));
 
-        ExtractionParameter extractionParameter = hiveQueryResolver.buildExtractionParameter(Integer.parseInt(dataSetUID));
+        ExtractionParameter extractionParameter = queryResolver.buildExtractionParameter(Integer.parseInt(dataSetUID));
         if (extractionParameter == null)
             throw new RestException(String.format(BAD_REQUEST_MESSAGE, "Couldn't make the execution parameter map. It may be some meta data problem. Please check it out."), httpServletResponse);
         logger.info(String.format("%s - extractionParameter: %s", currentThreadName, extractionParameter));
 
-        ExtractionRequest extractionRequest = hiveQueryResolver.buildExtractionRequest(extractionParameter);
+        ExtractionRequest extractionRequest = queryResolver.buildExtractionRequest(extractionParameter);
         if (extractionRequest == null)
             throw new RestException(String.format(BAD_REQUEST_MESSAGE, "Couldn't make the execution request object. It may be some meta data problem. Please check it out."), httpServletResponse);
         logger.info(String.format("%s - buildExtractionRequest: %s", currentThreadName, extractionRequest));
