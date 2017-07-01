@@ -1,10 +1,10 @@
 package org.bigdatacenter.dataprocessor.platform.service.metadb.version1;
 
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.ColumnInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.DatabaseInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.TableInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.FilterInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaColumnInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaDatabaseInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaTableInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestFilterInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestInfo;
 import org.bigdatacenter.dataprocessor.platform.persistence.metadb.version1.MetadbVersion1Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,22 +27,22 @@ public class MetadbVersion1ServiceImpl implements MetadbVersion1Service {
     }
 
     @Override
-    public List<FilterInfo> findConditions(Integer dataSetUID) {
-        return metadbVersion1Mapper.readConditions(dataSetUID);
+    public List<RequestFilterInfo> findConditions(Integer dataSetUID) {
+        return metadbVersion1Mapper.readFilters(dataSetUID);
     }
 
     @Override
-    public List<ColumnInfo> findColumnInfo(String eclEngName) {
+    public List<MetaColumnInfo> findColumnInfo(String eclEngName) {
         return metadbVersion1Mapper.readColumnInfo(eclEngName);
     }
 
     @Override
-    public TableInfo findTableInfo(Integer etlIdx) {
+    public MetaTableInfo findTableInfo(Integer etlIdx) {
         return metadbVersion1Mapper.readTableInfo(etlIdx);
     }
 
     @Override
-    public DatabaseInfo findDatabaseInfo(Integer edlIdx) {
+    public MetaDatabaseInfo findDatabaseInfo(Integer edlIdx) {
         return metadbVersion1Mapper.readDatabaseInfo(edlIdx);
     }
 

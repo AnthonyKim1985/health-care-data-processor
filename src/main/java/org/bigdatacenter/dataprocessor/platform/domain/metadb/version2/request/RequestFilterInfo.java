@@ -12,7 +12,7 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FilterInfo implements Serializable {
+public class RequestFilterInfo implements Serializable {
     private Integer filterUID;
     private Integer dataSetUID;
     private String filterName;

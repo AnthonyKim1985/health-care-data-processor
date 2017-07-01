@@ -1,4 +1,4 @@
-package org.bigdatacenter.dataprocessor.platform.resolver;
+package org.bigdatacenter.dataprocessor.platform.resolver.query.common;
 
 import org.bigdatacenter.dataprocessor.common.DataProcessorUtil;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;

@@ -1,4 +1,4 @@
-package org.bigdatacenter.dataprocessor.platform.resolver;
+package org.bigdatacenter.dataprocessor.platform.resolver.script;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,7 +1,8 @@
-package org.bigdatacenter.dataprocessor.platform.resolver;
+package org.bigdatacenter.dataprocessor.platform.resolver.query.version2;
 
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.TaskInfo;
+import org.bigdatacenter.dataprocessor.platform.resolver.query.common.HiveQueryResolver;
 import org.bigdatacenter.dataprocessor.platform.service.metadb.version1.MetadbVersion1Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,7 @@ import java.util.Map;
  * Created by Anthony Jinhyuk Kim on 2017-07-01.
  */
 @Component
-public class HiveQueryResolverImplVersion2 extends HiveQueryResolver {
+public class HiveQueryResolverVersion2Impl extends HiveQueryResolver {
     @Autowired
     private MetadbVersion1Service metadbService;
 

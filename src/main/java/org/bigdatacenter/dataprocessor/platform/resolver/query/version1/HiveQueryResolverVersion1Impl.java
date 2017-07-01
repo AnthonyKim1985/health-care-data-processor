@@ -1,12 +1,13 @@
-package org.bigdatacenter.dataprocessor.platform.resolver;
+package org.bigdatacenter.dataprocessor.platform.resolver.query.version1;
 
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.TaskInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.ColumnInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.DatabaseInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.TableInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.FilterInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaColumnInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaDatabaseInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaTableInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestFilterInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestInfo;
+import org.bigdatacenter.dataprocessor.platform.resolver.query.common.HiveQueryResolver;
 import org.bigdatacenter.dataprocessor.platform.service.metadb.version1.MetadbVersion1Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,7 @@ import java.util.Map;
  */
 @Component
 @Deprecated
-public class HiveQueryResolverImplVersion1 extends HiveQueryResolver {
+public class HiveQueryResolverVersion1Impl extends HiveQueryResolver {
     @Autowired
     private MetadbVersion1Service metadbService;
 
@@ -41,38 +42,38 @@ public class HiveQueryResolverImplVersion1 extends HiveQueryResolver {
         //
         // TODO: dataset_select DB 에서 dataSetUID 에 해당하는 조건 리스트를 찾는다.
         //
-        List<FilterInfo> filterInfoList = metadbService.findConditions(dataSetUID);
+        List<RequestFilterInfo> requestFilterInfoList = metadbService.findConditions(dataSetUID);
 
-        if (filterInfoList == null)
+        if (requestFilterInfoList == null)
             return null;
 
-        for (FilterInfo filterInfo : filterInfoList) {
+        for (RequestFilterInfo requestFilterInfo : requestFilterInfoList) {
             //
             // TODO: extract_col_list 에서 dataset_select 의 variableEngName 에 해당하는 extract_col_list 의 모든 컬럼 리스트를 찾는다.
             //
-            List<ColumnInfo> columnInfoList = metadbService.findColumnInfo(filterInfo.getVariableEngName());
+            List<MetaColumnInfo> metaColumnInfoList = metadbService.findColumnInfo(requestFilterInfo.getVariableEngName());
 
-            for (ColumnInfo columnInfo : columnInfoList) {
+            for (MetaColumnInfo metaColumnInfo : metaColumnInfoList) {
                 //
                 // TODO: extract_tb_list 에서 etl_idx 에 해당하는 테이블 리스트를 찾는다.
                 //
-                TableInfo tableInfo = metadbService.findTableInfo(columnInfo.getEtl_idx());
+                MetaTableInfo metaTableInfo = metadbService.findTableInfo(metaColumnInfo.getEtl_idx());
 
                 //
                 // TODO: extract_db_list 에서 edl_idx 에 해당하는 데이터베이스 리스트를 찾는다.
                 //
-                DatabaseInfo databaseInfo = metadbService.findDatabaseInfo(tableInfo.getEdl_idx());
+                MetaDatabaseInfo metaDatabaseInfo = metadbService.findDatabaseInfo(metaTableInfo.getEdl_idx());
 
-                if (!databaseInfo.getEdl_eng_name().equals(requestInfo.getDatasetName()))
+                if (!metaDatabaseInfo.getEdl_eng_name().equals(requestInfo.getDatasetName()))
                     continue;
 
                 //
                 // TODO: TaskInfo 객체를 생성한다.
                 //
-                TaskInfo taskInfo = new TaskInfo(databaseInfo.getEdl_eng_name(),
-                        String.format("%s_%s", tableInfo.getEtl_eng_name(), filterInfo.getVariableYear()),
-                        columnInfo.getEcl_eng_name(),
-                        filterInfo.getVariableValue());
+                TaskInfo taskInfo = new TaskInfo(metaDatabaseInfo.getEdl_eng_name(),
+                        String.format("%s_%s", metaTableInfo.getEtl_eng_name(), requestFilterInfo.getVariableYear()),
+                        metaColumnInfo.getEcl_eng_name(),
+                        requestFilterInfo.getVariableValue());
 
                 taskInfoList.add(taskInfo);
             }

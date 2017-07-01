@@ -1,10 +1,10 @@
 package org.bigdatacenter.dataprocessor.platform.service.metadb.version1;
 
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.ColumnInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.DatabaseInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.TableInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.FilterInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaColumnInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaDatabaseInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaTableInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestFilterInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestInfo;
 
 import java.util.List;
@@ -16,13 +16,13 @@ import java.util.List;
 public interface MetadbVersion1Service {
     RequestInfo findRequest(Integer dataSetUID);
 
-    List<FilterInfo> findConditions(Integer dataSetUID);
+    List<RequestFilterInfo> findConditions(Integer dataSetUID);
 
-    List<ColumnInfo> findColumnInfo(String eclEngName);
+    List<MetaColumnInfo> findColumnInfo(String eclEngName);
 
-    TableInfo findTableInfo(Integer etlIdx);
+    MetaTableInfo findTableInfo(Integer etlIdx);
 
-    DatabaseInfo findDatabaseInfo(Integer edlIdx);
+    MetaDatabaseInfo findDatabaseInfo(Integer edlIdx);
 
     void insertFtpRequest(FtpInfo ftpInfo);
 

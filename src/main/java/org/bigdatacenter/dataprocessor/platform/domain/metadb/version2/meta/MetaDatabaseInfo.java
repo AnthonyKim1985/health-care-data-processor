@@ -1,4 +1,4 @@
-package org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta;
+package org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,16 +7,15 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 
 /**
- * Created by Anthony Jinhyuk Kim on 2017-06-08.
+ * Created by Anthony Jinhyuk Kim on 2017-07-01.
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@Deprecated
-public class DatabaseInfo implements Serializable {
+@AllArgsConstructor
+public class MetaDatabaseInfo implements Serializable {
     private Integer edl_idx;
     private String edl_org_name;
     private String edl_kor_name;
     private String edl_eng_name;
-    private Integer edl_indicator_yn;
+    private Byte edl_indicator_yn;
 }

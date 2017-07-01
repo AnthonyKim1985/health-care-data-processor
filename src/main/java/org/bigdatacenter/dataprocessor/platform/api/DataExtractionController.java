@@ -3,7 +3,7 @@ package org.bigdatacenter.dataprocessor.platform.api;
 import org.bigdatacenter.dataprocessor.common.DataProcessorUtil;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
-import org.bigdatacenter.dataprocessor.platform.resolver.QueryResolver;
+import org.bigdatacenter.dataprocessor.platform.resolver.query.common.QueryResolver;
 import org.bigdatacenter.dataprocessor.platform.service.metadb.version1.MetadbVersion1Service;
 import org.bigdatacenter.dataprocessor.springboot.config.RabbitMQConfig;
 import org.bigdatacenter.dataprocessor.springboot.exception.RestException;

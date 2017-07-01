@@ -7,22 +7,22 @@
     </select>
 
     <!-- LFilterInfoInfo> findConditions(@Param("dataSetUID") Integer dataSetUID) -->
-    <select id="readConditions" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.FilterInfo">
+    <select id="readConditions" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestFilterInfo">
         SELECT * FROM health_care_ui.bogun_dataset_select WHERE dataSetUid = #{dataSetUID};
     </select>
 
-    <!-- List<ColumnInfo> findColumnInfo(@Param("eclEngName") String eclEngName) -->
-    <select id="readColumnInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.ColumnInfo">
+    <!-- LMetaColumnInfoInfo> findColumnInfo(@Param("eclEngName") String eclEngName) -->
+    <select id="readColumnInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaColumnInfo">
         SELECT * FROM health_care_ui.extract_col_list WHERE ecl_eng_name like #{eclEngName};
     </select>
 
-    <!-- TableInfo findTableInfo(@Param("etlIdx") Integer etlIdx) -->
-    <select id="readTableInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.TableInfo">
+    <MetaTableInfoInfo findTableInfo(@Param("etlIdx") Integer etlIdx) -->
+    <select id="readTableInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaTableInfo">
         SELECT * FROM health_care_ui.extract_tb_list WHERE etl_idx = #{etlIdx};
     </select>
 
-    <!-- DatabaseInfo findDatabaseInfo(@Param("edlIdx") Integer edlIdx) -->
-    <select id="readDatabaseInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.DatabaseInfo">
+    <MetaDatabaseInfoInfo findDatabaseInfo(@Param("edlIdx") Integer edlIdx) -->
+    <select id="readDatabaseInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaDatabaseInfo">
         SELECT * FROM health_care_ui.extract_db_list WHERE edl_idx = #{edlIdx};
     </select>
 

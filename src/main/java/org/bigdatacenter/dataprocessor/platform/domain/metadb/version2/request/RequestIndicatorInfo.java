@@ -12,7 +12,7 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class IndicatorInfo implements Serializable {
+public class RequestIndicatorInfo implements Serializable {
     private Integer clickIndicatorUID;
     private Integer dataSetUID;
     private Integer indicatorID;

@@ -1,4 +1,4 @@
-package org.bigdatacenter.dataprocessor.platform.resolver;
+package org.bigdatacenter.dataprocessor.platform.resolver.script;
 
 /**
  * Created by Anthony Jinhyuk Kim on 2017-06-17.

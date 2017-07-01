@@ -4,7 +4,7 @@ import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.HiveTask;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestInfo;
-import org.bigdatacenter.dataprocessor.platform.resolver.ShellScriptResolver;
+import org.bigdatacenter.dataprocessor.platform.resolver.script.ShellScriptResolver;
 import org.bigdatacenter.dataprocessor.platform.service.hive.HiveService;
 import org.bigdatacenter.dataprocessor.platform.service.metadb.version1.MetadbVersion1Service;
 import org.slf4j.Logger;

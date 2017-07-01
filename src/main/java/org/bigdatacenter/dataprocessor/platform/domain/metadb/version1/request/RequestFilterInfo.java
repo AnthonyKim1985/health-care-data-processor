@@ -13,7 +13,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 @Deprecated
-public class FilterInfo implements Serializable {
+public class RequestFilterInfo implements Serializable {
     private Integer variableUID;
     private Integer dataSetUID;
     private Integer variableYear;

@@ -3,10 +3,10 @@ package org.bigdatacenter.dataprocessor.platform.persistence.metadb.version1;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.ColumnInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.DatabaseInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.TableInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.FilterInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaColumnInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaDatabaseInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaTableInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestFilterInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestInfo;
 
 import java.util.List;
@@ -22,16 +22,16 @@ public interface MetadbVersion1Mapper {
     //
     RequestInfo readRequest(@Param("dataSetUID") Integer dataSetUID);
 
-    List<FilterInfo> readConditions(@Param("dataSetUID") Integer dataSetUID);
+    List<RequestFilterInfo> readFilters(@Param("dataSetUID") Integer dataSetUID);
 
     //
     // Extraction Database
     //
-    List<ColumnInfo> readColumnInfo(@Param("eclEngName") String eclEngName);
+    List<MetaColumnInfo> readColumnInfo(@Param("eclEngName") String eclEngName);
 
-    TableInfo readTableInfo(@Param("etlIdx") Integer etlIdx);
+    MetaTableInfo readTableInfo(@Param("etlIdx") Integer etlIdx);
 
-    DatabaseInfo readDatabaseInfo(@Param("edlIdx") Integer edlIdx);
+    MetaDatabaseInfo readDatabaseInfo(@Param("edlIdx") Integer edlIdx);
 
     //
     // FTP Request Meta Database

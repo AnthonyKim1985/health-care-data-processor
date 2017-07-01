@@ -13,12 +13,10 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 @Deprecated
-public class ColumnInfo implements Serializable {
-    private Integer ecl_idx;
+public class MetaDatabaseInfo implements Serializable {
     private Integer edl_idx;
-    private Integer etl_idx;
-    private String ecl_kor_name;
-    private String ecl_eng_name;
-    private Integer ecl_search_type;
-    private Integer is_usable;
+    private String edl_org_name;
+    private String edl_kor_name;
+    private String edl_eng_name;
+    private Integer edl_indicator_yn;
 }

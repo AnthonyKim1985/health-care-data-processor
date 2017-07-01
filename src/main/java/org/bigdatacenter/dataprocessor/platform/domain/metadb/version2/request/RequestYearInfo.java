@@ -12,7 +12,7 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class YearInfo implements Serializable {
+public class RequestYearInfo implements Serializable {
     private Integer clickYearUID;
     private Integer dataSetUID;
     private String yearName;
