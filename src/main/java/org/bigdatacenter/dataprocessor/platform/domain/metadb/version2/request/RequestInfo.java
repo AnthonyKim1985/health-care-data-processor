@@ -1,14 +1,13 @@
-package org.bigdatacenter.dataprocessor.platform.domain.metadb;
+package org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
- * Created by Anthony Jinhyuk Kim on 2017-06-12.
+ * Created by Anthony Jinhyuk Kim on 2017-07-01.
  */
 @Data
 @NoArgsConstructor
@@ -26,16 +25,17 @@ public class RequestInfo implements Serializable {
     private String userID;
     private Integer groupUID;
     private Integer linkID;
-    private Date signDate;
-    private Date processDate;
-    private Integer dataState;
-    private Integer processState;
-    private Integer openState;
-    private Integer dataType;
-    private Integer whoState;
-    private Date startDate;
-    private Date endDate;
+    private String signDate;
+    private String processDate;
+    private Byte dataState;
+    private Byte processState;
+    private Byte openState;
+    private Byte dataType;
+    private Byte whoState;
+    private String startDate;
+    private String endDate;
     private Integer ranking;
     private String versionInfo;
-    private Integer delState;
+    private Byte delState;
+    private Integer datasetID;
 }

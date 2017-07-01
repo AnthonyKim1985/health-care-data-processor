@@ -1,39 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="org.bigdatacenter.dataprocessor.platform.persistence.metadb.MetadbMapper">
+<mapper namespace="org.bigdatacenter.dataprocessor.platform.persistence.metadb.version1.MetadbVersion1Mapper">
     <!-- RequestInfo findRequest(@Param("dataSetUID") Integer dataSetUID) -->
-    <select id="readRequest" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.RequestInfo">
+    <select id="readRequest" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestInfo">
         SELECT * FROM health_care_ui.bogun_dataset_list WHERE dataSetUid = #{dataSetUID};
     </select>
 
-    <!-- List<ConditionInfo> findConditions(@Param("dataSetUID") Integer dataSetUID) -->
-    <select id="readConditions" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.ConditionInfo">
+    <!-- LFilterInfoInfo> findConditions(@Param("dataSetUID") Integer dataSetUID) -->
+    <select id="readConditions" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.FilterInfo">
         SELECT * FROM health_care_ui.bogun_dataset_select WHERE dataSetUid = #{dataSetUID};
     </select>
 
     <!-- List<ColumnInfo> findColumnInfo(@Param("eclEngName") String eclEngName) -->
-    <select id="readColumnInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.ColumnInfo">
+    <select id="readColumnInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.ColumnInfo">
         SELECT * FROM health_care_ui.extract_col_list WHERE ecl_eng_name like #{eclEngName};
     </select>
 
     <!-- TableInfo findTableInfo(@Param("etlIdx") Integer etlIdx) -->
-    <select id="readTableInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.TableInfo">
+    <select id="readTableInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.TableInfo">
         SELECT * FROM health_care_ui.extract_tb_list WHERE etl_idx = #{etlIdx};
     </select>
 
     <!-- DatabaseInfo findDatabaseInfo(@Param("edlIdx") Integer edlIdx) -->
-    <select id="readDatabaseInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.DatabaseInfo">
+    <select id="readDatabaseInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.DatabaseInfo">
         SELECT * FROM health_care_ui.extract_db_list WHERE edl_idx = #{edlIdx};
     </select>
 
     <!-- void createFtpRequest(@Param("ftpInfo") FtpInfo ftpInfo) -->
-    <insert id="createFtpRequest" parameterType="org.bigdatacenter.dataprocessor.platform.domain.metadb.FtpInfo">
+    <insert id="createFtpRequest" parameterType="org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo">
         INSERT INTO health_care_ui.ftp_request_meta (dataSetUID, userID, ftpURI)
         VALUES (#{ftpInfo.dataSetUID}, #{ftpInfo.userID}, #{ftpInfo.ftpURI});
     </insert>
 
     <!-- FtpInfo readFtpRequest(@Param("dataSetUID") Integer dataSetUID) -->
-    <select id="readFtpRequest" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.FtpInfo">
+    <select id="readFtpRequest" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo">
         SELECT * FROM health_care_ui.ftp_request_meta WHERE dataSetUID = #{dataSetUID};
     </select>
 </mapper>

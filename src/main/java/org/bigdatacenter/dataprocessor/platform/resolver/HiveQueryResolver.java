@@ -4,7 +4,7 @@ import org.bigdatacenter.dataprocessor.common.DataProcessorUtil;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.HiveTask;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.RequestInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestInfo;
 import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;

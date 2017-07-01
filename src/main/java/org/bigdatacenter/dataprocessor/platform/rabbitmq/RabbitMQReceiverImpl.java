@@ -2,11 +2,11 @@ package org.bigdatacenter.dataprocessor.platform.rabbitmq;
 
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.HiveTask;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.FtpInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.RequestInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestInfo;
 import org.bigdatacenter.dataprocessor.platform.resolver.ShellScriptResolver;
 import org.bigdatacenter.dataprocessor.platform.service.hive.HiveService;
-import org.bigdatacenter.dataprocessor.platform.service.metadb.MetadbService;
+import org.bigdatacenter.dataprocessor.platform.service.metadb.version1.MetadbVersion1Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
     private HiveService hiveService;
 
     @Autowired
-    private MetadbService metadbService;
+    private MetadbVersion1Service metadbService;
 
     @Autowired
     private ShellScriptResolver shellScriptResolver;

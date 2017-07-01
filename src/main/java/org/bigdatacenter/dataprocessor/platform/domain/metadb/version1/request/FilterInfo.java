@@ -1,4 +1,4 @@
-package org.bigdatacenter.dataprocessor.platform.domain.metadb;
+package org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +12,8 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ConditionInfo implements Serializable {
+@Deprecated
+public class FilterInfo implements Serializable {
     private Integer variableUID;
     private Integer dataSetUID;
     private Integer variableYear;

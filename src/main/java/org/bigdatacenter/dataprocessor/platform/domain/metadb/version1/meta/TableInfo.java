@@ -1,4 +1,4 @@
-package org.bigdatacenter.dataprocessor.platform.domain.metadb;
+package org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,6 +12,7 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Deprecated
 public class TableInfo implements Serializable {
     private Integer etl_idx;
     private Integer edl_idx;

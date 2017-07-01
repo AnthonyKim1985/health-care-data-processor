@@ -1,8 +1,13 @@
 package org.bigdatacenter.dataprocessor.platform.resolver;
 
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.*;
-import org.bigdatacenter.dataprocessor.platform.service.metadb.MetadbService;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.TaskInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.ColumnInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.DatabaseInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.TableInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.FilterInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestInfo;
+import org.bigdatacenter.dataprocessor.platform.service.metadb.version1.MetadbVersion1Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +23,7 @@ import java.util.Map;
 @Deprecated
 public class HiveQueryResolverImplVersion1 extends HiveQueryResolver {
     @Autowired
-    private MetadbService metadbService;
+    private MetadbVersion1Service metadbService;
 
     @Override
     public ExtractionParameter buildExtractionParameter(Integer dataSetUID) {
@@ -36,16 +41,16 @@ public class HiveQueryResolverImplVersion1 extends HiveQueryResolver {
         //
         // TODO: dataset_select DB 에서 dataSetUID 에 해당하는 조건 리스트를 찾는다.
         //
-        List<ConditionInfo> conditionInfoList = metadbService.findConditions(dataSetUID);
+        List<FilterInfo> filterInfoList = metadbService.findConditions(dataSetUID);
 
-        if (conditionInfoList == null)
+        if (filterInfoList == null)
             return null;
 
-        for (ConditionInfo conditionInfo : conditionInfoList) {
+        for (FilterInfo filterInfo : filterInfoList) {
             //
             // TODO: extract_col_list 에서 dataset_select 의 variableEngName 에 해당하는 extract_col_list 의 모든 컬럼 리스트를 찾는다.
             //
-            List<ColumnInfo> columnInfoList = metadbService.findColumnInfo(conditionInfo.getVariableEngName());
+            List<ColumnInfo> columnInfoList = metadbService.findColumnInfo(filterInfo.getVariableEngName());
 
             for (ColumnInfo columnInfo : columnInfoList) {
                 //
@@ -65,9 +70,9 @@ public class HiveQueryResolverImplVersion1 extends HiveQueryResolver {
                 // TODO: TaskInfo 객체를 생성한다.
                 //
                 TaskInfo taskInfo = new TaskInfo(databaseInfo.getEdl_eng_name(),
-                        String.format("%s_%s", tableInfo.getEtl_eng_name(), conditionInfo.getVariableYear()),
+                        String.format("%s_%s", tableInfo.getEtl_eng_name(), filterInfo.getVariableYear()),
                         columnInfo.getEcl_eng_name(),
-                        conditionInfo.getVariableValue());
+                        filterInfo.getVariableValue());
 
                 taskInfoList.add(taskInfo);
             }
