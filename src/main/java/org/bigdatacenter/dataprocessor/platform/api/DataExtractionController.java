@@ -5,6 +5,7 @@ import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.resolver.query.common.QueryResolver;
 import org.bigdatacenter.dataprocessor.platform.service.metadb.version1.MetadbVersion1Service;
+import org.bigdatacenter.dataprocessor.platform.service.metadb.version2.MetadbVersion2Service;
 import org.bigdatacenter.dataprocessor.springboot.config.RabbitMQConfig;
 import org.bigdatacenter.dataprocessor.springboot.exception.RestException;
 import org.slf4j.Logger;
@@ -33,7 +34,7 @@ public class DataExtractionController {
     private RabbitTemplate rabbitTemplate;
 
     @Autowired
-    private MetadbVersion1Service metadbService;
+    private MetadbVersion2Service metadbService;
 
     @Autowired
     @Qualifier("HiveQueryResolverImplVersion2")
@@ -42,8 +43,32 @@ public class DataExtractionController {
     //
     // TODO: Health Care Data Extraction API
     //
+//    @RequestMapping(value = "dataExtractionVersion1", method = RequestMethod.GET)
+//    public void dataExtractionMetaVersion1(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
+//        if (!DataProcessorUtil.isNumeric(dataSetUID))
+//            throw new RestException(String.format(BAD_REQUEST_MESSAGE, "dataSetUID is not numeric."), httpServletResponse);
+//        logger.info(String.format("%s - Extraction data set UID: %s", currentThreadName, dataSetUID));
+//
+//        if (metadbVersion1Service.isExecutedJob(Integer.parseInt(dataSetUID)))
+//            throw new RestException(String.format(BAD_REQUEST_MESSAGE, String.format("dataSetUID \"%s\" has already been executed.", dataSetUID)), httpServletResponse);
+//        logger.info(String.format("%s - dataSetUID: %s", currentThreadName, dataSetUID));
+//
+//        ExtractionParameter extractionParameter = queryResolverVersion1.buildExtractionParameter(Integer.parseInt(dataSetUID));
+//        if (extractionParameter == null)
+//            throw new RestException(String.format(BAD_REQUEST_MESSAGE, "Couldn't make the execution parameter map. It may be some meta data problem. Please check it out."), httpServletResponse);
+//        logger.info(String.format("%s - extractionParameter: %s", currentThreadName, extractionParameter));
+//
+//        ExtractionRequest extractionRequest = queryResolverVersion1.buildExtractionRequest(extractionParameter);
+//        if (extractionRequest == null)
+//            throw new RestException(String.format(BAD_REQUEST_MESSAGE, "Couldn't make the execution request object. It may be some meta data problem. Please check it out."), httpServletResponse);
+//        logger.info(String.format("%s - buildExtractionRequest: %s", currentThreadName, extractionRequest));
+//
+//        rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, extractionRequest);
+//        httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+//    }
+
     @RequestMapping(value = "dataExtraction", method = RequestMethod.GET)
-    public void dataExtraction(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
+    public void dataExtractionMetaVersion2(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
         if (!DataProcessorUtil.isNumeric(dataSetUID))
             throw new RestException(String.format(BAD_REQUEST_MESSAGE, "dataSetUID is not numeric."), httpServletResponse);
         logger.info(String.format("%s - Extraction data set UID: %s", currentThreadName, dataSetUID));

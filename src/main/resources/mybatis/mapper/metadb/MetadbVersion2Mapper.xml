@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.bigdatacenter.dataprocessor.platform.persistence.metadb.version2.MetadbVersion2Mapper">
+    <!-- RequestInfo readRequest(@Param("dataSetUID") Integer dataSetUID) -->
+    <select id="readRequest"
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestInfo">
+        SELECT * FROM health_care_ui.tr_dataset_list WHERE dataSetUID = #{dataSetUID};
+    </select>
+
+    <!-- List<RequestFilterInfo> readRequestFilters(@Param("dataSetUID") Integer dataSetUID) -->
+    <select id="readRequestFilters"
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestFilterInfo">
+        SELECT * FROM health_care_ui.tr_dataset_filter WHERE dataSetUID = #{dataSetUID};
+    </select>
+
+    <!-- List<RequestYearInfo> readRequestYears(@Param("dataSetUID") Integer dataSetUID) -->
+    <select id="readRequestYears"
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestYearInfo">
+        SELECT * FROM health_care_ui.tr_dataset_year WHERE dataSetUID = #{dataSetUID};
+    </select>
+
+    <!-- List<RequestIndicatorInfo> readRequestIndicators(@Param("dataSetUID") Integer dataSetUID) -->
+    <select id="readRequestIndicators"
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestIndicatorInfo">
+        SELECT * FROM health_care_ui.tr_dataset_indicator WHERE dataSetUID = #{dataSetUID};
+    </select>
 
 </mapper>

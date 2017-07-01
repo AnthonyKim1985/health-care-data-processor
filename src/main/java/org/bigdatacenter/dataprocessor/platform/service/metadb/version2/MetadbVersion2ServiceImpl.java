@@ -1,5 +1,6 @@
 package org.bigdatacenter.dataprocessor.platform.service.metadb.version2;
 
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestFilterInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestIndicatorInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestInfo;
@@ -36,5 +37,15 @@ public class MetadbVersion2ServiceImpl implements MetadbVersion2Service {
     @Override
     public List<RequestIndicatorInfo> findRequestIndicators(Integer dataSetUID) {
         return metadbVersion2Mapper.readRequestIndicators(dataSetUID);
+    }
+
+    @Override
+    public void insertFtpRequest(FtpInfo ftpInfo) {
+        metadbVersion2Mapper.createFtpRequest(ftpInfo);
+    }
+
+    @Override
+    public boolean isExecutedJob(Integer dataSetUID) {
+        return metadbVersion2Mapper.readFtpRequest(dataSetUID) != null;
     }
 }

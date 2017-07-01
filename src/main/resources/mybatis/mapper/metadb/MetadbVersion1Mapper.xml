@@ -3,25 +3,25 @@
 <mapper namespace="org.bigdatacenter.dataprocessor.platform.persistence.metadb.version1.MetadbVersion1Mapper">
     <!-- RequestInfo findRequest(@Param("dataSetUID") Integer dataSetUID) -->
     <select id="readRequest" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestInfo">
-        SELECT * FROM health_care_ui.bogun_dataset_list WHERE dataSetUid = #{dataSetUID};
+        SELECT * FROM health_care_ui.bogun_dataset_list WHERE dataSetUID = #{dataSetUID};
     </select>
 
-    <!-- LFilterInfoInfo> findConditions(@Param("dataSetUID") Integer dataSetUID) -->
+    <!-- List<FilterInfoInfo> findConditions(@Param("dataSetUID") Integer dataSetUID) -->
     <select id="readConditions" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestFilterInfo">
-        SELECT * FROM health_care_ui.bogun_dataset_select WHERE dataSetUid = #{dataSetUID};
+        SELECT * FROM health_care_ui.bogun_dataset_select WHERE dataSetUID = #{dataSetUID};
     </select>
 
-    <!-- LMetaColumnInfoInfo> findColumnInfo(@Param("eclEngName") String eclEngName) -->
+    <!-- List<MetaColumnInfoInfo> findColumnInfo(@Param("eclEngName") String eclEngName) -->
     <select id="readColumnInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaColumnInfo">
-        SELECT * FROM health_care_ui.extract_col_list WHERE ecl_eng_name like #{eclEngName};
+        SELECT * FROM health_care_ui.extract_col_list WHERE ecl_eng_name = #{eclEngName};
     </select>
 
-    <MetaTableInfoInfo findTableInfo(@Param("etlIdx") Integer etlIdx) -->
+    <!-- MetaTableInfoInfo findTableInfo(@Param("etlIdx") Integer etlIdx) -->
     <select id="readTableInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaTableInfo">
         SELECT * FROM health_care_ui.extract_tb_list WHERE etl_idx = #{etlIdx};
     </select>
 
-    <MetaDatabaseInfoInfo findDatabaseInfo(@Param("edlIdx") Integer edlIdx) -->
+    <!-- MetaDatabaseInfoInfo findDatabaseInfo(@Param("edlIdx") Integer edlIdx) -->
     <select id="readDatabaseInfo" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.meta.MetaDatabaseInfo">
         SELECT * FROM health_care_ui.extract_db_list WHERE edl_idx = #{edlIdx};
     </select>

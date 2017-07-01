@@ -1,5 +1,6 @@
 package org.bigdatacenter.dataprocessor.platform.service.metadb.version2;
 
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestFilterInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestIndicatorInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestInfo;
@@ -18,4 +19,8 @@ public interface MetadbVersion2Service {
     List<RequestYearInfo> findRequestYears(Integer dataSetUID);
 
     List<RequestIndicatorInfo> findRequestIndicators(Integer dataSetUID);
+
+    void insertFtpRequest(FtpInfo ftpInfo);
+
+    boolean isExecutedJob(Integer dataSetUID);
 }
