@@ -1,7 +1,7 @@
 package org.bigdatacenter.dataprocessor.platform.rabbitmq;
 
-import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
-import org.bigdatacenter.dataprocessor.platform.domain.hive.HiveTask;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.version1.ExtractionRequestVersion1;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.common.HiveTask;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestInfo;
 import org.bigdatacenter.dataprocessor.platform.resolver.script.ShellScriptResolver;
@@ -34,7 +34,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
 
 
     @Override
-    public void runReceiver(ExtractionRequest extractionRequest) {
+    public void runReceiver(ExtractionRequestVersion1 extractionRequest) {
         if (!validateRequest(extractionRequest)) {
             logger.error(String.format("%s - Error occurs : extraction request list is null", currentThreadName));
             return;
@@ -53,7 +53,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         logger.info(String.format("%s - All job is done, Elapsed time: %d ms", currentThreadName, (System.currentTimeMillis() - jobBeginTime)));
     }
 
-    private boolean validateRequest(ExtractionRequest extractionRequest) {
+    private boolean validateRequest(ExtractionRequestVersion1 extractionRequest) {
         if (extractionRequest == null)
             return false;
         else if (extractionRequest.getHiveTaskList().size() == 0)

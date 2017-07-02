@@ -1,14 +1,11 @@
 package org.bigdatacenter.dataprocessor.platform.resolver.query.common;
 
 import org.bigdatacenter.dataprocessor.common.DataProcessorUtil;
-import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
-import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
-import org.bigdatacenter.dataprocessor.platform.domain.hive.HiveTask;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.TaskInfo;
 import org.springframework.stereotype.Component;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,55 +14,42 @@ import java.util.Map;
  */
 @Component
 public abstract class HiveQueryResolver implements QueryResolver {
-    @Override
-    public ExtractionRequest buildExtractionRequest(ExtractionParameter extractionParameter) {
-        List<HiveTask> hiveTaskList = new ArrayList<>();
-        RequestInfo requestInfo = extractionParameter.getRequestInfo();
-        Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = extractionParameter.getParameterMap();
+    protected Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> convertTaskInfoListToParameterMap(List<TaskInfo> taskInfoList) {
+        Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = new HashMap<>();
 
-        for (String dbAndTableName : parameterMap.keySet()) {
-            StringBuilder hiveQueryBuilder = new StringBuilder();
-            hiveQueryBuilder.append(String.format("SELECT * FROM %s WHERE ", dbAndTableName));
+        //
+        // TODO: Hive Query 생성을 위한 parameter map 을 생성한다.
+        //
+        for (TaskInfo taskInfo : taskInfoList) {
+            String parameterKey = String.format("%s.%s", taskInfo.getDatabaseName(), taskInfo.getTableName());
+            Map<String/*column*/, List<String>/*values*/> parameterValue = parameterMap.get(parameterKey);
 
-            Map<String/*column*/, List<String>/*values*/> conditionMap = parameterMap.get(dbAndTableName);
+            List<String> values;
+            if (parameterValue == null) {
+                values = new ArrayList<>();
+                values.add(taskInfo.getValue());
 
-            List<String> columnNameList = new ArrayList<>();
-            columnNameList.addAll(conditionMap.keySet());
+                parameterValue = new HashMap<>();
+                parameterValue.put(taskInfo.getColumnName(), values);
 
-            for (int columnIndex = 0; columnIndex < columnNameList.size(); columnIndex++) {
-                String columnName = columnNameList.get(columnIndex);
-                List<String> values = conditionMap.get(columnName);
+                parameterMap.put(parameterKey, parameterValue);
+            } else {
+                values = parameterValue.get(taskInfo.getColumnName());
 
-                if (values == null || values.size() == 0)
-                    return null;
+                if (values == null) {
+                    values = new ArrayList<>();
+                    values.add(taskInfo.getValue());
 
-                if (values.size() == 1) {
-                    hiveQueryBuilder.append(getEquality(columnName, values.get(0)));
+                    parameterValue.put(taskInfo.getColumnName(), values);
                 } else {
-                    hiveQueryBuilder.append('(');
-                    for (int valueIndex = 0; valueIndex < values.size(); valueIndex++) {
-                        hiveQueryBuilder.append(getEquality(columnName, values.get(valueIndex)));
-
-                        if (valueIndex < values.size() - 1)
-                            hiveQueryBuilder.append(" OR ");
-                    }
-                    hiveQueryBuilder.append(')');
+                    values.add(taskInfo.getValue());
                 }
-
-                if (columnIndex < columnNameList.size() - 1)
-                    hiveQueryBuilder.append(" AND ");
             }
-
-            // /tmp/health_care/{dataSetUID}/{dbAndTableName}/{timeStamp}
-            final String hdfsLocation = String.format("/tmp/health_care/%d/%s/%s", requestInfo.getDataSetUID(),
-                    dbAndTableName, String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
-            hiveTaskList.add(new HiveTask(hdfsLocation, hiveQueryBuilder.toString()));
         }
-
-        return new ExtractionRequest(requestInfo, hiveTaskList);
+        return parameterMap;
     }
 
-    private String getEquality(String columnName, String value) {
+    protected String getEquality(String columnName, String value) {
         if (DataProcessorUtil.isNumeric(value))
             return String.format("%s = %s", columnName, value);
 

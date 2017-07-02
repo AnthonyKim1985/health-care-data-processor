@@ -1,6 +1,6 @@
 package org.bigdatacenter.dataprocessor.platform.service.hive;
 
-import org.bigdatacenter.dataprocessor.platform.domain.hive.HiveTask;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.common.HiveTask;
 import org.bigdatacenter.dataprocessor.platform.persistence.hive.HiveMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -1,9 +1,7 @@
 package org.bigdatacenter.dataprocessor.platform.resolver.query.common;
 
-import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionParameter;
-import org.bigdatacenter.dataprocessor.platform.domain.hive.ExtractionRequest;
-
-import java.util.List;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.common.ExtractionParameter;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.common.ExtractionRequest;
 
 /**
  * Created by Anthony Jinhyuk Kim on 2017-06-12.

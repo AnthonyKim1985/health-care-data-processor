@@ -14,8 +14,8 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class MetaColumnInfo implements Serializable {
     private Integer ecl_idx;
-    private String edl_idx;
-    private String etl_idx;
+    private Integer edl_idx;
+    private Integer etl_idx;
     private String ecl_kor_name;
     private String ecl_eng_name;
     private Integer ecl_search_type;
