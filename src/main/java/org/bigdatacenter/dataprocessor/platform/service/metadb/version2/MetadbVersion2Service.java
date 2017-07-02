@@ -3,6 +3,7 @@ package org.bigdatacenter.dataprocessor.platform.service.metadb.version2;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaColumnInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaDatabaseInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaRelationIndicatorWithColumn;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaTableInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestFilterInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestIndicatorInfo;
@@ -27,7 +28,11 @@ public interface MetadbVersion2Service {
 
     MetaTableInfo findMetaTable(Integer etlIdx);
 
+    List<MetaColumnInfo> findMetaColumns(Integer eclIdx);
+
     List<MetaColumnInfo> findMetaColumns(Integer edlIdx, String eclEngName, Integer eclYear);
+
+    List<MetaRelationIndicatorWithColumn> findMetaRelationIndicatorWithColumn(Integer eilIdx);
 
     void insertFtpRequest(FtpInfo ftpInfo);
 

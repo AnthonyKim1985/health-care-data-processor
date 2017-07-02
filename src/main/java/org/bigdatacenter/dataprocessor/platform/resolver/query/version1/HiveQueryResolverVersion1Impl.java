@@ -87,7 +87,7 @@ public class HiveQueryResolverVersion1Impl implements HiveQueryResolverVersion1 
     public ExtractionRequestVersion1 buildExtractionRequest(ExtractionParameterVersion1 extractionParameter) {
         RequestInfo requestInfo = extractionParameter.getRequestInfo();
         Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = extractionParameter.getParameterMap();
-        List<HiveTask> hiveTaskList = HiveQueryResolverUtil.convertParameterMapToHiveTaskList(requestInfo.getDataSetUID(), parameterMap);
+        List<HiveTask> hiveTaskList = HiveQueryResolverUtil.convertParameterMapToHiveTaskList(requestInfo.getDataSetUID(), parameterMap, null);
 
         return new ExtractionRequestVersion1(requestInfo, hiveTaskList);
     }

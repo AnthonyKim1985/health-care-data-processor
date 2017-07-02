@@ -77,7 +77,7 @@ public class DataExtractionController {
 //    }
 
     @SuppressWarnings("Duplicates")
-    @RequestMapping(value = "dataExtractionVersion2", method = RequestMethod.GET)
+    @RequestMapping(value = "dataExtraction", method = RequestMethod.GET)
     public void dataExtractionMetaVersion2(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
         if (!DataProcessorUtil.isNumeric(dataSetUID))
             throw new RestException(String.format(BAD_REQUEST_MESSAGE, "dataSetUID is not numeric."), httpServletResponse);

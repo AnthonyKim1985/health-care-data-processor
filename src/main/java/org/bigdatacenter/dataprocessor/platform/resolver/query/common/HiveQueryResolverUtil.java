@@ -49,12 +49,12 @@ public final class HiveQueryResolverUtil {
         return parameterMap;
     }
 
-    public static List<HiveTask> convertParameterMapToHiveTaskList(Integer dataSetUID, Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap) {
+    public static List<HiveTask> convertParameterMapToHiveTaskList(Integer dataSetUID, Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap, String indicator) {
         final List<HiveTask> hiveTaskList = new ArrayList<>();
 
         for (String dbAndTableName : parameterMap.keySet()) {
             StringBuilder hiveQueryBuilder = new StringBuilder();
-            hiveQueryBuilder.append(String.format("SELECT * FROM %s WHERE ", dbAndTableName));
+            hiveQueryBuilder.append(String.format("SELECT %s FROM %s WHERE ", (indicator == null ? "*" : indicator), dbAndTableName));
 
             Map<String/*column*/, List<String>/*values*/> conditionMap = parameterMap.get(dbAndTableName);
 

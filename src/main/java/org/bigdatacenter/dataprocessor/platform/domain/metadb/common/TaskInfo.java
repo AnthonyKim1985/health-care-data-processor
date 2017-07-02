@@ -16,5 +16,6 @@ public class TaskInfo implements Serializable {
     private String databaseName;
     private String tableName;
     private String columnName;
+
     private String value;
 }

@@ -15,5 +15,6 @@ import java.util.Map;
 @AllArgsConstructor
 public class ExtractionParameterVersion2 implements Serializable {
     private RequestInfo requestInfo;
+    private String indicator;
     private Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap;
 }

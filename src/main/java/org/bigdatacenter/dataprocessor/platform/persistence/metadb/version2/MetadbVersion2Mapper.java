@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaColumnInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaDatabaseInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaRelationIndicatorWithColumn;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaTableInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestFilterInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestIndicatorInfo;
@@ -32,7 +33,9 @@ public interface MetadbVersion2Mapper {
     //
     MetaDatabaseInfo readMetaDatabase(@Param("edl_idx") Integer edlIdx);
     MetaTableInfo readMetaTable(@Param("etl_idx") Integer etlIdx);
-    List<MetaColumnInfo> readMetaColumns(@Param("edl_idx") Integer edlIdx, @Param("ecl_eng_name") String eclEngName, @Param("ecl_year") Integer eclYear);
+    List<MetaColumnInfo> readMetaColumns1(@Param("ecl_idx") Integer eclIdx);
+    List<MetaColumnInfo> readMetaColumns2(@Param("edl_idx") Integer edlIdx, @Param("ecl_eng_name") String eclEngName, @Param("ecl_year") Integer eclYear);
+    List<MetaRelationIndicatorWithColumn> readMetaRelationIndicatorWithColumn(@Param("eil_idx") Integer eilIdx);
 
 
     //
