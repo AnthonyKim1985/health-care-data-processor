@@ -34,55 +34,64 @@ public class DataExtractionController {
     private RabbitTemplate rabbitTemplate;
 
     @Autowired
-    private MetadbVersion2Service metadbService;
+    private MetadbVersion1Service metadbVersion1Service;
 
     @Autowired
-    @Qualifier("HiveQueryResolverImplVersion2")
-    private QueryResolver queryResolver;
+    @Qualifier("HiveQueryResolverVersion1Impl")
+    private QueryResolver version1QueryResolver;
+
+    @Autowired
+    private MetadbVersion2Service metadbVersion2Service;
+
+    @Autowired
+    @Qualifier("HiveQueryResolverVersion2Impl")
+    private QueryResolver version2QueryResolver;
 
     //
     // TODO: Health Care Data Extraction API
     //
-//    @RequestMapping(value = "dataExtractionVersion1", method = RequestMethod.GET)
-//    public void dataExtractionMetaVersion1(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
-//        if (!DataProcessorUtil.isNumeric(dataSetUID))
-//            throw new RestException(String.format(BAD_REQUEST_MESSAGE, "dataSetUID is not numeric."), httpServletResponse);
-//        logger.info(String.format("%s - Extraction data set UID: %s", currentThreadName, dataSetUID));
-//
-//        if (metadbVersion1Service.isExecutedJob(Integer.parseInt(dataSetUID)))
-//            throw new RestException(String.format(BAD_REQUEST_MESSAGE, String.format("dataSetUID \"%s\" has already been executed.", dataSetUID)), httpServletResponse);
-//        logger.info(String.format("%s - dataSetUID: %s", currentThreadName, dataSetUID));
-//
-//        ExtractionParameter extractionParameter = queryResolverVersion1.buildExtractionParameter(Integer.parseInt(dataSetUID));
-//        if (extractionParameter == null)
-//            throw new RestException(String.format(BAD_REQUEST_MESSAGE, "Couldn't make the execution parameter map. It may be some meta data problem. Please check it out."), httpServletResponse);
-//        logger.info(String.format("%s - extractionParameter: %s", currentThreadName, extractionParameter));
-//
-//        ExtractionRequest extractionRequest = queryResolverVersion1.buildExtractionRequest(extractionParameter);
-//        if (extractionRequest == null)
-//            throw new RestException(String.format(BAD_REQUEST_MESSAGE, "Couldn't make the execution request object. It may be some meta data problem. Please check it out."), httpServletResponse);
-//        logger.info(String.format("%s - buildExtractionRequest: %s", currentThreadName, extractionRequest));
-//
-//        rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, extractionRequest);
-//        httpServletResponse.setStatus(HttpServletResponse.SC_OK);
-//    }
+    @SuppressWarnings("Duplicates")
+    @RequestMapping(value = "dataExtractionVersion1", method = RequestMethod.GET)
+    public void dataExtractionMetaVersion1(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
+        if (!DataProcessorUtil.isNumeric(dataSetUID))
+            throw new RestException(String.format(BAD_REQUEST_MESSAGE, "dataSetUID is not numeric."), httpServletResponse);
+        logger.info(String.format("%s - Extraction data set UID: %s", currentThreadName, dataSetUID));
 
-    @RequestMapping(value = "dataExtraction", method = RequestMethod.GET)
+        if (metadbVersion1Service.isExecutedJob(Integer.parseInt(dataSetUID)))
+            throw new RestException(String.format(BAD_REQUEST_MESSAGE, String.format("dataSetUID \"%s\" has already been executed.", dataSetUID)), httpServletResponse);
+        logger.info(String.format("%s - dataSetUID: %s", currentThreadName, dataSetUID));
+
+        ExtractionParameter extractionParameter = version1QueryResolver.buildExtractionParameter(Integer.parseInt(dataSetUID));
+        if (extractionParameter == null)
+            throw new RestException(String.format(BAD_REQUEST_MESSAGE, "Couldn't make the execution parameter map. It may be some meta data problem. Please check it out."), httpServletResponse);
+        logger.info(String.format("%s - extractionParameter: %s", currentThreadName, extractionParameter));
+
+        ExtractionRequest extractionRequest = version1QueryResolver.buildExtractionRequest(extractionParameter);
+        if (extractionRequest == null)
+            throw new RestException(String.format(BAD_REQUEST_MESSAGE, "Couldn't make the execution request object. It may be some meta data problem. Please check it out."), httpServletResponse);
+        logger.info(String.format("%s - buildExtractionRequest: %s", currentThreadName, extractionRequest));
+
+        rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, extractionRequest);
+        httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+    }
+
+    @SuppressWarnings("Duplicates")
+    @RequestMapping(value = "dataExtractionVersion2", method = RequestMethod.GET)
     public void dataExtractionMetaVersion2(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
         if (!DataProcessorUtil.isNumeric(dataSetUID))
             throw new RestException(String.format(BAD_REQUEST_MESSAGE, "dataSetUID is not numeric."), httpServletResponse);
         logger.info(String.format("%s - Extraction data set UID: %s", currentThreadName, dataSetUID));
 
-        if (metadbService.isExecutedJob(Integer.parseInt(dataSetUID)))
+        if (metadbVersion2Service.isExecutedJob(Integer.parseInt(dataSetUID)))
             throw new RestException(String.format(BAD_REQUEST_MESSAGE, String.format("dataSetUID \"%s\" has already been executed.", dataSetUID)), httpServletResponse);
         logger.info(String.format("%s - dataSetUID: %s", currentThreadName, dataSetUID));
 
-        ExtractionParameter extractionParameter = queryResolver.buildExtractionParameter(Integer.parseInt(dataSetUID));
+        ExtractionParameter extractionParameter = version2QueryResolver.buildExtractionParameter(Integer.parseInt(dataSetUID));
         if (extractionParameter == null)
             throw new RestException(String.format(BAD_REQUEST_MESSAGE, "Couldn't make the execution parameter map. It may be some meta data problem. Please check it out."), httpServletResponse);
         logger.info(String.format("%s - extractionParameter: %s", currentThreadName, extractionParameter));
 
-        ExtractionRequest extractionRequest = queryResolver.buildExtractionRequest(extractionParameter);
+        ExtractionRequest extractionRequest = version2QueryResolver.buildExtractionRequest(extractionParameter);
         if (extractionRequest == null)
             throw new RestException(String.format(BAD_REQUEST_MESSAGE, "Couldn't make the execution request object. It may be some meta data problem. Please check it out."), httpServletResponse);
         logger.info(String.format("%s - buildExtractionRequest: %s", currentThreadName, extractionRequest));
