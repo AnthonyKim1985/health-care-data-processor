@@ -25,4 +25,32 @@
         SELECT * FROM health_care_ui.tr_dataset_indicator WHERE dataSetUID = #{dataSetUID};
     </select>
 
+    <!-- MetaDatabaseInfo readMetaDatabase(@Param("edl_idx") Integer edlIdx) -->
+    <select id="readMetaDatabase"
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaDatabaseInfo">
+        SELECT * FROM health_care_ui.chu_db_list WHERE edl_idx = #{edl_idx};
+    </select>
+
+    <!-- MetaTableInfo readMetaTable(@Param("etl_idx") Integer etlIdx) -->
+    <select id="readMetaTable"
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.meta`   db.version2.meta.MetaTableInfo">
+        SELECT * FROM health_care_ui.chu_tb_list WHERE etl_idx = #{etl_idx};
+    </select>
+
+    <!-- List<MetaColumnInfo> readMetaColumns(@Param("edl_idx") Integer edlIdx, @Param("ecl_eng_name") String eclEngName, @Param("ecl_year") Integer eclYear) -->
+    <select id="readMetaColumns"
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaColumnInfo">
+        SELECT * FROM health_care_ui.chu_col_list WHERE edl_idx = #{edl_idx} AND ecl_eng_name = #{ecl_eng_name} AND #{ecl_year};
+    </select>
+
+    <!-- void createFtpRequest(@Param("ftpInfo") FtpInfo ftpInfo) -->
+    <insert id="createFtpRequest" parameterType="org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo">
+        INSERT INTO health_care_ui.ftp_request_meta (dataSetUID, userID, ftpURI)
+        VALUES (#{ftpInfo.dataSetUID}, #{ftpInfo.userID}, #{ftpInfo.ftpURI});
+    </insert>
+
+    <!-- FtpInfo readFtpRequest(@Param("dataSetUID") Integer dataSetUID) -->
+    <select id="readFtpRequest" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo">
+        SELECT * FROM health_care_ui.ftp_request_meta WHERE dataSetUID = #{dataSetUID};
+    </select>
 </mapper>
