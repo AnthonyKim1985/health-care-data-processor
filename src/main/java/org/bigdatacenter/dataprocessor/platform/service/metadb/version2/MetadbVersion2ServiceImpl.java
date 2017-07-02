@@ -1,6 +1,9 @@
 package org.bigdatacenter.dataprocessor.platform.service.metadb.version2;
 
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaColumnInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaDatabaseInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaTableInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestFilterInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestIndicatorInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestInfo;
@@ -37,6 +40,21 @@ public class MetadbVersion2ServiceImpl implements MetadbVersion2Service {
     @Override
     public List<RequestIndicatorInfo> findRequestIndicators(Integer dataSetUID) {
         return metadbVersion2Mapper.readRequestIndicators(dataSetUID);
+    }
+
+    @Override
+    public MetaDatabaseInfo findMetaDatabase(Integer edlIdx) {
+        return metadbVersion2Mapper.readMetaDatabase(edlIdx);
+    }
+
+    @Override
+    public MetaTableInfo findMetaTable(Integer etlIdx) {
+        return metadbVersion2Mapper.readMetaTable(etlIdx);
+    }
+
+    @Override
+    public List<MetaColumnInfo> findMetaColumns(Integer edlIdx, String eclEngName, Integer eclYear) {
+        return metadbVersion2Mapper.readMetaColumns(edlIdx, eclEngName, eclYear);
     }
 
     @Override
