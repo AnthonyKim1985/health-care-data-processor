@@ -10,6 +10,7 @@ import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.R
 import org.bigdatacenter.dataprocessor.platform.resolver.query.common.HiveQueryResolver;
 import org.bigdatacenter.dataprocessor.platform.service.metadb.version1.MetadbVersion1Service;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import java.util.Map;
  */
 @Component
 @Deprecated
+@Qualifier("HiveQueryResolverVersion1Impl")
 public class HiveQueryResolverVersion1Impl extends HiveQueryResolver {
     @Autowired
     private MetadbVersion1Service metadbService;
