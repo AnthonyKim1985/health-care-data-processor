@@ -19,6 +19,10 @@ import java.util.List;
  */
 @Mapper
 public interface MetadbVersion2Mapper {
+    Integer PROCESS_STATE_COMPLETED = 1;
+    Integer PROCESS_STATE_PROCESSING = 2;
+    Integer PROCESS_STATE_REJECTED = 3;
+
     //
     // Request Transaction Database Methods
     //
@@ -26,6 +30,10 @@ public interface MetadbVersion2Mapper {
     List<RequestFilterInfo> readRequestFilters(@Param("dataSetUID") Integer dataSetUID);
     List<RequestYearInfo> readRequestYears(@Param("dataSetUID") Integer dataSetUID);
     List<RequestIndicatorInfo> readRequestIndicators(@Param("dataSetUID") Integer dataSetUID);
+    int updateProcessState(@Param("dataSetUID") Integer dataSetUID, @Param("processState") Integer processState);
+    int updateJobStartTime(@Param("dataSetUID") Integer dataSetUID, @Param("jobStartTime") String jobStartTime);
+    int updateJobEndTime(@Param("dataSetUID") Integer dataSetUID, @Param("jobEndTime") String jobEndTime);
+    int updateElapsedTime(@Param("dataSetUID") Integer dataSetUID, @Param("elapsedTime") String elapsedTime);
 
 
     //

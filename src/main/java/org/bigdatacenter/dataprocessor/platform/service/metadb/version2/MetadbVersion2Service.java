@@ -1,5 +1,6 @@
 package org.bigdatacenter.dataprocessor.platform.service.metadb.version2;
 
+import org.apache.ibatis.annotations.Param;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaColumnInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaDatabaseInfo;
@@ -23,6 +24,14 @@ public interface MetadbVersion2Service {
     List<RequestYearInfo> findRequestYears(Integer dataSetUID);
 
     List<RequestIndicatorInfo> findRequestIndicators(Integer dataSetUID);
+
+    int updateProcessState(Integer dataSetUID, Integer processState);
+
+    int updateJobStartTime(Integer dataSetUID, String jobStartTime);
+
+    int updateJobEndTime(Integer dataSetUID, String jobEndTime);
+
+    int updateElapsedTime(Integer dataSetUID, String elapsedTime);
 
     MetaDatabaseInfo findMetaDatabase(Integer edlIdx);
 

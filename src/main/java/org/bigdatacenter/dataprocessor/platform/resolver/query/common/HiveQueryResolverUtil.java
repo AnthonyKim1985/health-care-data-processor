@@ -53,37 +53,19 @@ public final class HiveQueryResolverUtil {
         final List<HiveTask> hiveTaskList = new ArrayList<>();
 
         for (String dbAndTableName : parameterMap.keySet()) {
+            if (dbAndTableName.startsWith("nps.nps_ykiho"))
+                continue;
+
             StringBuilder hiveQueryBuilder = new StringBuilder();
-            hiveQueryBuilder.append(String.format("SELECT %s FROM %s WHERE ", (indicator == null ? "*" : indicator), dbAndTableName));
+            hiveQueryBuilder.append(String.format("SELECT %s FROM %s", (indicator == null ? "*" : indicator), dbAndTableName));
 
             Map<String/*column*/, List<String>/*values*/> conditionMap = parameterMap.get(dbAndTableName);
 
             List<String> columnNameList = new ArrayList<>();
             columnNameList.addAll(conditionMap.keySet());
 
-            for (int columnIndex = 0; columnIndex < columnNameList.size(); columnIndex++) {
-                String columnName = columnNameList.get(columnIndex);
-                List<String> values = conditionMap.get(columnName);
-
-                if (values == null || values.size() == 0)
-                    return null;
-
-                if (values.size() == 1) {
-                    hiveQueryBuilder.append(getEquality(columnName, values.get(0)));
-                } else {
-                    hiveQueryBuilder.append('(');
-                    for (int valueIndex = 0; valueIndex < values.size(); valueIndex++) {
-                        hiveQueryBuilder.append(getEquality(columnName, values.get(valueIndex)));
-
-                        if (valueIndex < values.size() - 1)
-                            hiveQueryBuilder.append(" OR ");
-                    }
-                    hiveQueryBuilder.append(')');
-                }
-
-                if (columnIndex < columnNameList.size() - 1)
-                    hiveQueryBuilder.append(" AND ");
-            }
+            if (columnNameList.size() > 0)
+                hiveQueryBuilder.append(buildWhereClause(columnNameList, conditionMap));
 
             // /tmp/health_care/{dataSetUID}/{dbAndTableName}/{timeStamp}
             final String hdfsLocation = String.format("/tmp/health_care/%d/%s/%s", dataSetUID,
@@ -92,6 +74,36 @@ public final class HiveQueryResolverUtil {
         }
 
         return hiveTaskList;
+    }
+
+    private static String buildWhereClause(List<String> columnNameList, Map<String/*column*/, List<String>/*values*/> conditionMap) {
+        StringBuilder hiveWhereClauseBuilder = new StringBuilder();
+        hiveWhereClauseBuilder.append(" WHERE ");
+
+        for (int columnIndex = 0; columnIndex < columnNameList.size(); columnIndex++) {
+            String columnName = columnNameList.get(columnIndex);
+            List<String> values = conditionMap.get(columnName);
+
+            if (values == null || values.size() == 0)
+                return null;
+
+            if (values.size() == 1) {
+                hiveWhereClauseBuilder.append(getEquality(columnName, values.get(0)));
+            } else {
+                hiveWhereClauseBuilder.append('(');
+                for (int valueIndex = 0; valueIndex < values.size(); valueIndex++) {
+                    hiveWhereClauseBuilder.append(getEquality(columnName, values.get(valueIndex)));
+
+                    if (valueIndex < values.size() - 1)
+                        hiveWhereClauseBuilder.append(" OR ");
+                }
+                hiveWhereClauseBuilder.append(')');
+            }
+
+            if (columnIndex < columnNameList.size() - 1)
+                hiveWhereClauseBuilder.append(" AND ");
+        }
+        return hiveWhereClauseBuilder.toString();
     }
 
     private static String getEquality(String columnName, String value) {

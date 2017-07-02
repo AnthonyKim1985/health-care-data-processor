@@ -37,39 +37,6 @@ public class HiveQueryResolverVersion2Impl implements HiveQueryResolverVersion2 
     @Autowired
     private MetadbVersion2Service metadbVersion2Service;
 
-    private String takeIndicatorTask(Integer dataSetUID) {
-        Map<String, Object> indicatorMap = new HashMap<>();
-        List<String> indicatorList = new ArrayList<>();
-
-        List<RequestIndicatorInfo> requestIndicatorInfoList = metadbVersion2Service.findRequestIndicators(dataSetUID);
-
-        for (RequestIndicatorInfo requestIndicatorInfo : requestIndicatorInfoList) {
-            List<MetaRelationIndicatorWithColumn> relationIndicatorWithColumnList = metadbVersion2Service.findMetaRelationIndicatorWithColumn(requestIndicatorInfo.getIndicatorID());
-
-            for (MetaRelationIndicatorWithColumn relationIndicatorWithColumn : relationIndicatorWithColumnList) {
-                List<MetaColumnInfo> columnInfoList = metadbVersion2Service.findMetaColumns(relationIndicatorWithColumn.getEcl_idx());
-
-                for (MetaColumnInfo columnInfo : columnInfoList)
-                    if (!indicatorMap.containsKey(columnInfo.getEcl_eng_name()))
-                        indicatorMap.put(columnInfo.getEcl_eng_name(), null);
-            }
-        }
-
-        indicatorList.addAll(indicatorMap.keySet());
-
-        StringBuilder indicatorBuilder = new StringBuilder();
-        for (int i = 0; i < indicatorList.size(); i++) {
-            indicatorBuilder.append(indicatorList.get(i));
-            if (i < indicatorList.size() - 1)
-                indicatorBuilder.append(',');
-        }
-
-        if (indicatorBuilder.toString().length() > 0)
-            return indicatorBuilder.toString();
-
-        return null;
-    }
-
     @Override
     public ExtractionParameterVersion2 buildExtractionParameter(Integer dataSetUID) {
         List<TaskInfo> taskInfoList = new ArrayList<>();
@@ -120,6 +87,39 @@ public class HiveQueryResolverVersion2Impl implements HiveQueryResolverVersion2 
         }
 
         return new ExtractionParameterVersion2(requestInfo, indicator, HiveQueryResolverUtil.convertTaskInfoListToParameterMap(taskInfoList));
+    }
+
+    private String takeIndicatorTask(Integer dataSetUID) {
+        Map<String, Object> indicatorMap = new HashMap<>();
+        List<String> indicatorList = new ArrayList<>();
+
+        List<RequestIndicatorInfo> requestIndicatorInfoList = metadbVersion2Service.findRequestIndicators(dataSetUID);
+
+        for (RequestIndicatorInfo requestIndicatorInfo : requestIndicatorInfoList) {
+            List<MetaRelationIndicatorWithColumn> relationIndicatorWithColumnList = metadbVersion2Service.findMetaRelationIndicatorWithColumn(requestIndicatorInfo.getIndicatorID());
+
+            for (MetaRelationIndicatorWithColumn relationIndicatorWithColumn : relationIndicatorWithColumnList) {
+                List<MetaColumnInfo> columnInfoList = metadbVersion2Service.findMetaColumns(relationIndicatorWithColumn.getEcl_idx());
+
+                for (MetaColumnInfo columnInfo : columnInfoList)
+                    if (!indicatorMap.containsKey(columnInfo.getEcl_eng_name()))
+                        indicatorMap.put(columnInfo.getEcl_eng_name(), null);
+            }
+        }
+
+        indicatorList.addAll(indicatorMap.keySet());
+
+        StringBuilder indicatorBuilder = new StringBuilder();
+        for (int i = 0; i < indicatorList.size(); i++) {
+            indicatorBuilder.append(indicatorList.get(i));
+            if (i < indicatorList.size() - 1)
+                indicatorBuilder.append(',');
+        }
+
+        if (indicatorBuilder.toString().length() == 0)
+            return null;
+
+        return indicatorBuilder.toString();
     }
 
     @Override

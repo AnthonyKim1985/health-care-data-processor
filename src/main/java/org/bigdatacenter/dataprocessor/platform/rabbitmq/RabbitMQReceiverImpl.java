@@ -4,6 +4,7 @@ import org.bigdatacenter.dataprocessor.platform.domain.hive.common.HiveTask;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.version2.ExtractionRequestVersion2;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestInfo;
+import org.bigdatacenter.dataprocessor.platform.persistence.metadb.version2.MetadbVersion2Mapper;
 import org.bigdatacenter.dataprocessor.platform.resolver.script.ShellScriptResolver;
 import org.bigdatacenter.dataprocessor.platform.service.hive.HiveService;
 import org.bigdatacenter.dataprocessor.platform.service.metadb.version2.MetadbVersion2Service;
@@ -13,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -21,6 +24,7 @@ import java.util.List;
 @Component
 public class RabbitMQReceiverImpl implements RabbitMQReceiver {
     private static final Logger logger = LoggerFactory.getLogger(RabbitMQReceiverImpl.class);
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private final String currentThreadName = Thread.currentThread().getName();
 
     @Autowired
@@ -32,7 +36,6 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
     @Autowired
     private ShellScriptResolver shellScriptResolver;
 
-
     @Override
     public void runReceiver(ExtractionRequestVersion2 extractionRequest) {
         if (!validateRequest(extractionRequest)) {
@@ -42,15 +45,24 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
 
         final RequestInfo requestInfo = extractionRequest.getRequestInfo();
         final List<HiveTask> hiveTaskList = extractionRequest.getHiveTaskList();
-
         final long jobBeginTime = System.currentTimeMillis();
 
         logger.info(String.format("%s - Start RabbitMQ Message Receiver task", currentThreadName));
 
+        metadbService.updateProcessState(requestInfo.getDataSetUID(), MetadbVersion2Mapper.PROCESS_STATE_PROCESSING);
+        metadbService.updateJobStartTime(requestInfo.getDataSetUID(), dateFormat.format(new Date(jobBeginTime)));
+
         runQueryTask(hiveTaskList);
         runArchiveTask(requestInfo);
 
-        logger.info(String.format("%s - All job is done, Elapsed time: %d ms", currentThreadName, (System.currentTimeMillis() - jobBeginTime)));
+        final long jobEndTime = System.currentTimeMillis();
+        final long elapsedTime = jobEndTime - jobBeginTime;
+
+        logger.info(String.format("%s - All job is done, Elapsed time: %d ms", currentThreadName, elapsedTime));
+
+        metadbService.updateJobEndTime(requestInfo.getDataSetUID(), dateFormat.format(new Date(jobEndTime)));
+        metadbService.updateElapsedTime(requestInfo.getDataSetUID(), dateFormat.format(new Date(elapsedTime)));
+        metadbService.updateProcessState(requestInfo.getDataSetUID(), MetadbVersion2Mapper.PROCESS_STATE_COMPLETED);
     }
 
     private boolean validateRequest(ExtractionRequestVersion2 extractionRequest) {

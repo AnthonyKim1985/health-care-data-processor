@@ -34,12 +34,12 @@ public class DataExtractionController {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    @Autowired
-    private MetadbVersion1Service metadbVersion1Service;
+//    @Autowired
+//    private MetadbVersion1Service metadbVersion1Service;
 
-    @Autowired
-    @Qualifier("HiveQueryResolverVersion1Impl")
-    private HiveQueryResolverVersion1 version1QueryResolver;
+//    @Autowired
+//    @Qualifier("HiveQueryResolverVersion1Impl")
+//    private HiveQueryResolverVersion1 version1QueryResolver;
 
     @Autowired
     private MetadbVersion2Service metadbVersion2Service;

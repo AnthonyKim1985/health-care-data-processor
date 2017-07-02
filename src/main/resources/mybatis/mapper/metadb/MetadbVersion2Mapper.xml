@@ -25,6 +25,29 @@
         SELECT * FROM health_care_ui.tr_dataset_indicator WHERE dataSetUID = #{dataSetUID};
     </select>
 
+    <!-- int updateProcessState(@Param("dataSetUID") Integer dataSetUID, @Param("processState") Integer processState) -->
+    <update id="updateProcessState">
+        UPDATE health_care_ui.tr_dataset_list SET processState = #{processState} WHERE dataSetUID = #{dataSetUID};
+    </update>
+
+    <!-- int updateJobStartTime(@Param("dataSetUID") Integer dataSetUID, @Param("jobStartTime") String jobStartTime) -->
+    <update id="updateJobStartTime">
+        UPDATE health_care_ui.tr_dataset_list SET jobStartTime = #{jobStartTime} WHERE dataSetUID = #{dataSetUID};
+    </update>
+
+    <!-- int updateJobEndTime(@Param("dataSetUID") Integer dataSetUID, @Param("jobEndTime") String jobEndTime) -->
+    <update id="updateJobEndTime">
+        UPDATE health_care_ui.tr_dataset_list SET jobEndTime = #{jobEndTime} WHERE dataSetUID = #{dataSetUID};
+    </update>
+
+    <!-- int updateElapsedTime(@Param("dataSetUID") Integer dataSetUID, @Param("elapsedTime") String elapsedTime) -->
+    <update id="updateElapsedTime">
+        UPDATE health_care_ui.tr_dataset_list SET elapsedTime = #{elapsedTime} WHERE dataSetUID = #{dataSetUID};
+    </update>
+
+
+
+
     <!-- MetaDatabaseInfo readMetaDatabase(@Param("edl_idx") Integer edlIdx) -->
     <select id="readMetaDatabase"
             resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaDatabaseInfo">
@@ -53,6 +76,9 @@
             resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaRelationIndicatorWithColumn">
         SELECT * FROM health_care_ui.chu_indicator_column_relation WHERE eil_idx = #{eil_idx};
     </select>
+
+
+
 
     <!-- void createFtpRequest(@Param("ftpInfo") FtpInfo ftpInfo) -->
     <insert id="createFtpRequest" parameterType="org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo">

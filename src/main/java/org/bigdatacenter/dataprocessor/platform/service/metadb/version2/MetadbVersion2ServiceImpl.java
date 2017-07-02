@@ -44,6 +44,26 @@ public class MetadbVersion2ServiceImpl implements MetadbVersion2Service {
     }
 
     @Override
+    public int updateProcessState(Integer dataSetUID, Integer processState) {
+        return metadbVersion2Mapper.updateProcessState(dataSetUID, processState);
+    }
+
+    @Override
+    public int updateJobStartTime(Integer dataSetUID, String jobStartTime) {
+        return metadbVersion2Mapper.updateJobStartTime(dataSetUID, jobStartTime);
+    }
+
+    @Override
+    public int updateJobEndTime(Integer dataSetUID, String jobEndTime) {
+        return metadbVersion2Mapper.updateJobEndTime(dataSetUID, jobEndTime);
+    }
+
+    @Override
+    public int updateElapsedTime(Integer dataSetUID, String elapsedTime) {
+        return metadbVersion2Mapper.updateElapsedTime(dataSetUID, elapsedTime);
+    }
+
+    @Override
     public MetaDatabaseInfo findMetaDatabase(Integer edlIdx) {
         return metadbVersion2Mapper.readMetaDatabase(edlIdx);
     }
