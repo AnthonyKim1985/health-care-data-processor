@@ -1,7 +1,5 @@
 package org.bigdatacenter.dataprocessor.platform.resolver.query.version2;
 
-import org.bigdatacenter.dataprocessor.platform.domain.hive.common.ExtractionParameter;
-import org.bigdatacenter.dataprocessor.platform.domain.hive.common.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.common.HiveTask;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.version2.ExtractionParameterVersion2;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.version2.ExtractionRequestVersion2;
@@ -12,13 +10,14 @@ import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.Meta
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestFilterInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestYearInfo;
-import org.bigdatacenter.dataprocessor.platform.resolver.query.common.HiveQueryResolver;
+import org.bigdatacenter.dataprocessor.platform.resolver.query.common.HiveQueryResolverUtil;
 import org.bigdatacenter.dataprocessor.platform.service.metadb.version2.MetadbVersion2Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,12 +28,15 @@ import java.util.Map;
  */
 @Component
 @Qualifier("HiveQueryResolverVersion2Impl")
-public class HiveQueryResolverVersion2Impl extends HiveQueryResolver {
+public class HiveQueryResolverVersion2Impl implements HiveQueryResolverVersion2 {
+    private static final Logger logger = LoggerFactory.getLogger(HiveQueryResolverVersion2Impl.class);
+    private final String currentThreadName = Thread.currentThread().getName();
+
     @Autowired
     private MetadbVersion2Service metadbVersion2Service;
 
     @Override
-    public ExtractionParameter buildExtractionParameter(Integer dataSetUID) {
+    public ExtractionParameterVersion2 buildExtractionParameter(Integer dataSetUID) {
         List<TaskInfo> taskInfoList = new ArrayList<>();
         Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = new HashMap<>();
 
@@ -60,13 +62,24 @@ public class HiveQueryResolverVersion2Impl extends HiveQueryResolver {
 
         // TODO: make tasks
         for (RequestYearInfo requestYearInfo : requestYearInfoList) {
+            logger.debug(requestYearInfo.toString());
             for (RequestFilterInfo requestFilterInfo : requestFilterInfoList) {
+                logger.debug(requestFilterInfo.toString());
+
                 // TODO: find column
                 List<MetaColumnInfo> metaColumnInfoList = metadbVersion2Service.findMetaColumns(
                         requestInfo.getDatasetID(), requestFilterInfo.getFilterEngName(), Integer.parseInt(requestYearInfo.getYearName()));
 
+                logger.debug(metaColumnInfoList.toString());
+
                 for (MetaColumnInfo metaColumnInfo : metaColumnInfoList) {
+                    logger.debug(metaColumnInfo.toString());
                     MetaTableInfo metaTableInfo = metadbVersion2Service.findMetaTable(metaColumnInfo.getEtl_idx());
+
+                    if (metaTableInfo == null)
+                        continue;
+
+                    logger.debug(metaTableInfo.toString());
 
                     String filterValues = requestFilterInfo.getFilterValues();
                     if (filterValues == null)
@@ -78,54 +91,16 @@ public class HiveQueryResolverVersion2Impl extends HiveQueryResolver {
             }
         }
 
-        return new ExtractionParameterVersion2(requestInfo, super.convertTaskInfoListToParameterMap(taskInfoList));
+        logger.debug("buildExtractionParameter is done");
+
+        return new ExtractionParameterVersion2(requestInfo, HiveQueryResolverUtil.convertTaskInfoListToParameterMap(taskInfoList));
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "Duplicates"})
-    public ExtractionRequest buildExtractionRequest(ExtractionParameter extractionParameter) {
-        List<HiveTask> hiveTaskList = new ArrayList<>();
-        RequestInfo requestInfo = (RequestInfo) extractionParameter.getRequestInfo();
+    public ExtractionRequestVersion2 buildExtractionRequest(ExtractionParameterVersion2 extractionParameter) {
+        RequestInfo requestInfo = extractionParameter.getRequestInfo();
         Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = extractionParameter.getParameterMap();
-
-        for (String dbAndTableName : parameterMap.keySet()) {
-            StringBuilder hiveQueryBuilder = new StringBuilder();
-            hiveQueryBuilder.append(String.format("SELECT * FROM %s WHERE ", dbAndTableName));
-
-            Map<String/*column*/, List<String>/*values*/> conditionMap = parameterMap.get(dbAndTableName);
-
-            List<String> columnNameList = new ArrayList<>();
-            columnNameList.addAll(conditionMap.keySet());
-
-            for (int columnIndex = 0; columnIndex < columnNameList.size(); columnIndex++) {
-                String columnName = columnNameList.get(columnIndex);
-                List<String> values = conditionMap.get(columnName);
-
-                if (values == null || values.size() == 0)
-                    return null;
-
-                if (values.size() == 1) {
-                    hiveQueryBuilder.append(getEquality(columnName, values.get(0)));
-                } else {
-                    hiveQueryBuilder.append('(');
-                    for (int valueIndex = 0; valueIndex < values.size(); valueIndex++) {
-                        hiveQueryBuilder.append(getEquality(columnName, values.get(valueIndex)));
-
-                        if (valueIndex < values.size() - 1)
-                            hiveQueryBuilder.append(" OR ");
-                    }
-                    hiveQueryBuilder.append(')');
-                }
-
-                if (columnIndex < columnNameList.size() - 1)
-                    hiveQueryBuilder.append(" AND ");
-            }
-
-            // /tmp/health_care/{dataSetUID}/{dbAndTableName}/{timeStamp}
-            final String hdfsLocation = String.format("/tmp/health_care/%d/%s/%s", requestInfo.getDataSetUID(),
-                    dbAndTableName, String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
-            hiveTaskList.add(new HiveTask(hdfsLocation, hiveQueryBuilder.toString()));
-        }
+        List<HiveTask> hiveTaskList = HiveQueryResolverUtil.convertParameterMapToHiveTaskList(requestInfo.getDataSetUID(), parameterMap);
 
         return new ExtractionRequestVersion2(requestInfo, hiveTaskList);
     }
