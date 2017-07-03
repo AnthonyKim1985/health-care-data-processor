@@ -17,6 +17,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Anthony Jinhyuk Kim on 2017-06-02.
@@ -25,6 +26,7 @@ import java.util.List;
 public class RabbitMQReceiverImpl implements RabbitMQReceiver {
     private static final Logger logger = LoggerFactory.getLogger(RabbitMQReceiverImpl.class);
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
     private final String currentThreadName = Thread.currentThread().getName();
 
     @Autowired
@@ -61,8 +63,15 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         logger.info(String.format("%s - All job is done, Elapsed time: %d ms", currentThreadName, elapsedTime));
 
         metadbService.updateJobEndTime(requestInfo.getDataSetUID(), dateFormat.format(new Date(jobEndTime)));
-        metadbService.updateElapsedTime(requestInfo.getDataSetUID(), dateFormat.format(new Date(elapsedTime)));
+        metadbService.updateElapsedTime(requestInfo.getDataSetUID(), getElapsedTime(elapsedTime));
         metadbService.updateProcessState(requestInfo.getDataSetUID(), MetadbVersion2Mapper.PROCESS_STATE_COMPLETED);
+    }
+
+    private String getElapsedTime(long millis) {
+        return String.format("%02d:%02d:%02d",
+                TimeUnit.MILLISECONDS.toHours(millis),
+                TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)),
+                TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
     }
 
     private boolean validateRequest(ExtractionRequestVersion2 extractionRequest) {
