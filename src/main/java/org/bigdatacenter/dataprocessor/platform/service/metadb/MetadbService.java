@@ -1,22 +1,21 @@
-package org.bigdatacenter.dataprocessor.platform.service.metadb.version2;
+package org.bigdatacenter.dataprocessor.platform.service.metadb;
 
-import org.apache.ibatis.annotations.Param;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaColumnInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaDatabaseInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaRelationIndicatorWithColumn;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaTableInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestFilterInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestIndicatorInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestYearInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaColumnInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaDatabaseInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaRelationIndicatorWithColumn;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaTableInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestFilterInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestIndicatorInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestYearInfo;
 
 import java.util.List;
 
 /**
  * Created by Anthony Jinhyuk Kim on 2017-07-01.
  */
-public interface MetadbVersion2Service {
+public interface MetadbService {
     RequestInfo findRequest(Integer dataSetUID);
 
     List<RequestFilterInfo> findRequestFilters(Integer dataSetUID);
@@ -40,6 +39,8 @@ public interface MetadbVersion2Service {
     List<MetaColumnInfo> findMetaColumns(Integer eclIdx);
 
     List<MetaColumnInfo> findMetaColumns(Integer edlIdx, String eclEngName, Integer eclYear);
+
+    List<String> findEngColumnNames(String etlEngName);
 
     List<MetaRelationIndicatorWithColumn> findMetaRelationIndicatorWithColumn(Integer eilIdx);
 

@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="org.bigdatacenter.dataprocessor.platform.persistence.metadb.version2.MetadbVersion2Mapper">
+<mapper namespace="org.bigdatacenter.dataprocessor.platform.persistence.metadb.MetadbMapper">
     <!-- RequestInfo readRequest(@Param("dataSetUID") Integer dataSetUID) -->
     <select id="readRequest"
-            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestInfo">
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestInfo">
         SELECT * FROM health_care_ui.tr_dataset_list WHERE dataSetUID = #{dataSetUID};
     </select>
 
     <!-- List<RequestFilterInfo> readRequestFilters(@Param("dataSetUID") Integer dataSetUID) -->
     <select id="readRequestFilters"
-            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestFilterInfo">
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestFilterInfo">
         SELECT * FROM health_care_ui.tr_dataset_filter WHERE dataSetUID = #{dataSetUID};
     </select>
 
     <!-- List<RequestYearInfo> readRequestYears(@Param("dataSetUID") Integer dataSetUID) -->
     <select id="readRequestYears"
-            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestYearInfo">
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestYearInfo">
         SELECT * FROM health_care_ui.tr_dataset_year WHERE dataSetUID = #{dataSetUID};
     </select>
 
     <!-- List<RequestIndicatorInfo> readRequestIndicators(@Param("dataSetUID") Integer dataSetUID) -->
     <select id="readRequestIndicators"
-            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestIndicatorInfo">
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestIndicatorInfo">
         SELECT * FROM health_care_ui.tr_dataset_indicator WHERE dataSetUID = #{dataSetUID};
     </select>
 
@@ -50,31 +50,36 @@
 
     <!-- MetaDatabaseInfo readMetaDatabase(@Param("edl_idx") Integer edlIdx) -->
     <select id="readMetaDatabase"
-            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaDatabaseInfo">
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaDatabaseInfo">
         SELECT * FROM health_care_ui.chu_db_list WHERE edl_idx = #{edl_idx};
     </select>
 
     <!-- MetaTableInfo readMetaTable(@Param("etl_idx") Integer etlIdx) -->
     <select id="readMetaTable"
-            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaTableInfo">
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaTableInfo">
         SELECT * FROM health_care_ui.chu_tb_list WHERE etl_idx = #{etl_idx};
     </select>
 
     <!-- List<MetaColumnInfo> readMetaColumns1(@Param("ecl_idx") Integer eclIdx) -->
-    <select id="readMetaColumns1" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaColumnInfo">
+    <select id="readMetaColumns1" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaColumnInfo">
         SELECT * FROM health_care_ui.chu_col_list WHERE ecl_idx = #{ecl_idx};
     </select>
 
     <!-- List<MetaColumnInfo> readMetaColumns2(@Param("edl_idx") Integer edlIdx, @Param("ecl_eng_name") String eclEngName, @Param("ecl_year") Integer eclYear) -->
     <select id="readMetaColumns2"
-            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaColumnInfo">
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaColumnInfo">
         SELECT * FROM health_care_ui.chu_col_list WHERE edl_idx = #{edl_idx} AND ecl_eng_name = #{ecl_eng_name} AND ecl_year = #{ecl_year};
     </select>
 
     <!-- List<MetaRelationIndicatorWithColumn> readMetaRelationIndicatorWithColumn(@Param("eil_idx") Integer eilIdx) -->
     <select id="readMetaRelationIndicatorWithColumn"
-            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaRelationIndicatorWithColumn">
+            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaRelationIndicatorWithColumn">
         SELECT * FROM health_care_ui.chu_indicator_column_relation WHERE eil_idx = #{eil_idx};
+    </select>
+
+    <!-- List<String> readEngColumnNames(@Param("etl_eng_name") String etlEngName) -->
+    <select id="readEngColumnNames" resultType="java.lang.String">
+        SELECT ecl_eng_name FROM health_care_ui.chu_col_list WHERE etl_idx=(SELECT etl_idx FROM health_care_ui.chu_tb_list WHERE etl_eng_name=#{etl_eng_name});
     </select>
 
 

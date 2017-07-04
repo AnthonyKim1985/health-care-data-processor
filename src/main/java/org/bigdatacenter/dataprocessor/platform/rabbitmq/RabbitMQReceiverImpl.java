@@ -1,13 +1,13 @@
 package org.bigdatacenter.dataprocessor.platform.rabbitmq;
 
 import org.bigdatacenter.dataprocessor.platform.domain.hive.common.HiveTask;
-import org.bigdatacenter.dataprocessor.platform.domain.hive.version2.ExtractionRequestVersion2;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestInfo;
-import org.bigdatacenter.dataprocessor.platform.persistence.metadb.version2.MetadbVersion2Mapper;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestInfo;
+import org.bigdatacenter.dataprocessor.platform.persistence.metadb.MetadbMapper;
 import org.bigdatacenter.dataprocessor.platform.resolver.script.ShellScriptResolver;
 import org.bigdatacenter.dataprocessor.platform.service.hive.HiveService;
-import org.bigdatacenter.dataprocessor.platform.service.metadb.version2.MetadbVersion2Service;
+import org.bigdatacenter.dataprocessor.platform.service.metadb.MetadbService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,13 +33,13 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
     private HiveService hiveService;
 
     @Autowired
-    private MetadbVersion2Service metadbService;
+    private MetadbService metadbService;
 
     @Autowired
     private ShellScriptResolver shellScriptResolver;
 
     @Override
-    public void runReceiver(ExtractionRequestVersion2 extractionRequest) {
+    public void runReceiver(ExtractionRequest extractionRequest) {
         if (!validateRequest(extractionRequest)) {
             logger.error(String.format("%s - Error occurs : extraction request list is null", currentThreadName));
             return;
@@ -51,7 +51,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
 
         logger.info(String.format("%s - Start RabbitMQ Message Receiver task", currentThreadName));
 
-        metadbService.updateProcessState(requestInfo.getDataSetUID(), MetadbVersion2Mapper.PROCESS_STATE_PROCESSING);
+        metadbService.updateProcessState(requestInfo.getDataSetUID(), MetadbMapper.PROCESS_STATE_PROCESSING);
         metadbService.updateJobStartTime(requestInfo.getDataSetUID(), dateFormat.format(new Date(jobBeginTime)));
 
         runQueryTask(hiveTaskList);
@@ -64,7 +64,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
 
         metadbService.updateJobEndTime(requestInfo.getDataSetUID(), dateFormat.format(new Date(jobEndTime)));
         metadbService.updateElapsedTime(requestInfo.getDataSetUID(), getElapsedTime(elapsedTime));
-        metadbService.updateProcessState(requestInfo.getDataSetUID(), MetadbVersion2Mapper.PROCESS_STATE_COMPLETED);
+        metadbService.updateProcessState(requestInfo.getDataSetUID(), MetadbMapper.PROCESS_STATE_COMPLETED);
     }
 
     private String getElapsedTime(long millis) {
@@ -74,7 +74,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
                 TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
     }
 
-    private boolean validateRequest(ExtractionRequestVersion2 extractionRequest) {
+    private boolean validateRequest(ExtractionRequest extractionRequest) {
         if (extractionRequest == null)
             return false;
         else if (extractionRequest.getHiveTaskList().size() == 0)

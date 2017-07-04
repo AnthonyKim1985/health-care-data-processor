@@ -1,4 +1,4 @@
-package org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta;
+package org.bigdatacenter.dataprocessor.platform.domain.metadb.meta;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -13,4 +13,5 @@ import java.io.Serializable;
 public class HiveTask implements Serializable {
     private String hdfsLocation;
     private String hiveQuery;
+    private String header;
 }

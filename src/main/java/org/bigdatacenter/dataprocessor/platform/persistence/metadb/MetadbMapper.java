@@ -1,16 +1,13 @@
-package org.bigdatacenter.dataprocessor.platform.persistence.metadb.version2;
+package org.bigdatacenter.dataprocessor.platform.persistence.metadb;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaColumnInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaDatabaseInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaRelationIndicatorWithColumn;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.meta.MetaTableInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestFilterInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestIndicatorInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request.RequestYearInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.*;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestFilterInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestIndicatorInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestYearInfo;
 
 import java.util.List;
 
@@ -18,7 +15,7 @@ import java.util.List;
  * Created by Anthony Jinhyuk Kim on 2017-07-01.
  */
 @Mapper
-public interface MetadbVersion2Mapper {
+public interface MetadbMapper {
     Integer PROCESS_STATE_COMPLETED = 1;
     Integer PROCESS_STATE_PROCESSING = 2;
     Integer PROCESS_STATE_REJECTED = 3;
@@ -43,6 +40,7 @@ public interface MetadbVersion2Mapper {
     MetaTableInfo readMetaTable(@Param("etl_idx") Integer etlIdx);
     List<MetaColumnInfo> readMetaColumns1(@Param("ecl_idx") Integer eclIdx);
     List<MetaColumnInfo> readMetaColumns2(@Param("edl_idx") Integer edlIdx, @Param("ecl_eng_name") String eclEngName, @Param("ecl_year") Integer eclYear);
+    List<String> readEngColumnNames(@Param("etl_eng_name") String etlEngName);
     List<MetaRelationIndicatorWithColumn> readMetaRelationIndicatorWithColumn(@Param("eil_idx") Integer eilIdx);
 
 

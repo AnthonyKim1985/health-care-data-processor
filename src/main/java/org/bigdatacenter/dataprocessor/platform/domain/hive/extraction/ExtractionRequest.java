@@ -1,9 +1,9 @@
-package org.bigdatacenter.dataprocessor.platform.domain.hive.version1;
+package org.bigdatacenter.dataprocessor.platform.domain.hive.extraction;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.common.HiveTask;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.version1.request.RequestInfo;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestInfo;
 
 import java.io.Serializable;
 import java.util.List;
@@ -13,8 +13,8 @@ import java.util.List;
  */
 @Data
 @AllArgsConstructor
-@Deprecated
-public class ExtractionRequestVersion1 implements Serializable {
+public class ExtractionRequest implements Serializable {
     private RequestInfo requestInfo;
+    private String indicator;
     private List<HiveTask> hiveTaskList;
 }

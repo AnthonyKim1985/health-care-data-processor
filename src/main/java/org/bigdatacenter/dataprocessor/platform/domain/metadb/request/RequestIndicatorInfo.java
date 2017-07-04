@@ -1,4 +1,4 @@
-package org.bigdatacenter.dataprocessor.platform.domain.metadb.version2.request;
+package org.bigdatacenter.dataprocessor.platform.domain.metadb.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,8 +12,9 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RequestYearInfo implements Serializable {
-    private Integer clickYearUID;
+public class RequestIndicatorInfo implements Serializable {
+    private Integer clickIndicatorUID;
     private Integer dataSetUID;
-    private String yearName;
+    private Integer indicatorID;
+    private String indicatorName;
 }
