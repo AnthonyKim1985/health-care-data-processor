@@ -1,5 +1,8 @@
 package org.bigdatacenter.dataprocessor.common;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 /**
  * Created by hyuk0 on 2017-06-21.
  */
@@ -12,5 +15,20 @@ public class DataProcessorUtil {
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    public static String getHashedString(String string) {
+        StringBuilder hashedStringBuilder = new StringBuilder();
+        try {
+            MessageDigest sh = MessageDigest.getInstance("SHA-256");
+            sh.update(string.getBytes());
+
+            for (byte aByteData : sh.digest())
+                hashedStringBuilder.append(Integer.toString((aByteData & 0xff) + 0x100, 16).substring(1));
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return hashedStringBuilder.toString();
     }
 }

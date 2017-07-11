@@ -2,7 +2,7 @@ package org.bigdatacenter.dataprocessor.platform.domain.hive.extraction;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.bigdatacenter.dataprocessor.platform.domain.hive.common.HiveTask;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.task.HiveTask;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestInfo;
 
 import java.io.Serializable;

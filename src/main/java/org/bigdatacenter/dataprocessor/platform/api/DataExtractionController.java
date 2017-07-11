@@ -40,7 +40,6 @@ public class DataExtractionController {
     //
     // TODO: Health Care Data Extraction API
     //
-    @SuppressWarnings("Duplicates")
     @RequestMapping(value = "dataExtraction", method = RequestMethod.GET)
     public void dataExtraction(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
         if (!DataProcessorUtil.isNumeric(dataSetUID))

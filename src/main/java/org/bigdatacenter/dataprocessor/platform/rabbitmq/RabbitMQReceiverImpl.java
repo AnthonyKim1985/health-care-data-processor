@@ -1,7 +1,9 @@
 package org.bigdatacenter.dataprocessor.platform.rabbitmq;
 
-import org.bigdatacenter.dataprocessor.platform.domain.hive.common.HiveTask;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.ExtractionRequest;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.task.HiveTask;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.task.creation.HiveCreationTask;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.task.extraction.HiveExtractionTask;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestInfo;
 import org.bigdatacenter.dataprocessor.platform.persistence.metadb.MetadbMapper;
@@ -45,16 +47,15 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
             return;
         }
 
-        final RequestInfo requestInfo = extractionRequest.getRequestInfo();
-        final List<HiveTask> hiveTaskList = extractionRequest.getHiveTaskList();
         final long jobBeginTime = System.currentTimeMillis();
+        final RequestInfo requestInfo = extractionRequest.getRequestInfo();
 
         logger.info(String.format("%s - Start RabbitMQ Message Receiver task", currentThreadName));
 
         metadbService.updateProcessState(requestInfo.getDataSetUID(), MetadbMapper.PROCESS_STATE_PROCESSING);
         metadbService.updateJobStartTime(requestInfo.getDataSetUID(), dateFormat.format(new Date(jobBeginTime)));
 
-        runQueryTask(hiveTaskList);
+        runQueryTask(extractionRequest);
         runArchiveTask(requestInfo);
 
         final long jobEndTime = System.currentTimeMillis();
@@ -83,29 +84,37 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         return true;
     }
 
-    private void runQueryTask(List<HiveTask> hiveTaskList) {
-        final int MaxHiveTasks = hiveTaskList.size();
-        for (int i = 0; i < MaxHiveTasks; i++) {
-            HiveTask hiveTask = hiveTaskList.get(i);
-            logger.info(String.format("%s - Remaining %d query processing", currentThreadName, (MaxHiveTasks - i)));
-            logger.info(String.format("%s - Start data extraction at Hive Query: %s", currentThreadName, hiveTask));
+    private void runQueryTask(ExtractionRequest extractionRequest) {
+        final List<HiveTask> hiveTaskList = extractionRequest.getHiveTaskList();
+        final int MAX_TASKS = hiveTaskList.size();
+
+        for (int i = 0; i < MAX_TASKS; i++) {
+            final HiveTask hiveTask = hiveTaskList.get(i);
+            final HiveCreationTask hiveCreationTask = hiveTask.getHiveCreationTask();
+            final HiveExtractionTask hiveExtractionTask = hiveTask.getHiveExtractionTask();
 
             final long queryBeginTime = System.currentTimeMillis();
-            hiveService.extractDataByHiveQL(hiveTask);
+            logger.info(String.format("%s - Remaining %d query processing", currentThreadName, (MAX_TASKS - i)));
+
+            logger.info(String.format("%s - Start table creation at Hive Query: %s", currentThreadName, hiveCreationTask.getHiveQuery()));
+            hiveService.createTableByHiveQL(hiveCreationTask);
+
+            logger.info(String.format("%s - Start data extraction at Hive Query: %s", currentThreadName, hiveExtractionTask.getHiveQuery()));
+            hiveService.extractDataByHiveQL(hiveExtractionTask);
 
             //
             // TODO: Merge Reducer output files in HDFS, download merged file to local file system.
             //
-            final String hdfsLocation = hiveTask.getHdfsLocation();
-            final String header = hiveTask.getHeader();
+            final String hdfsLocation = hiveExtractionTask.getHdfsLocation();
+            final String header = hiveExtractionTask.getHeader();
             shellScriptResolver.runReducePartsMerger(hdfsLocation, header);
 
             //
             // TODO: Update transaction database
             //
 
-
-            logger.info(String.format("%s - Finish data extraction at Hive Query: %s, Elapsed time: %d ms", currentThreadName, hiveTask, (System.currentTimeMillis() - queryBeginTime)));
+            final long queryEndTime = System.currentTimeMillis() - queryBeginTime;
+            logger.info(String.format("%s - Finish Hive Query: %s, Elapsed time: %d ms", currentThreadName, hiveTask, queryEndTime));
         }
     }
 

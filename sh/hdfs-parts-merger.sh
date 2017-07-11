@@ -3,8 +3,8 @@
 
 hdfsLocation=$1
 header=$2
-dbTableName=`echo ${hdfsLocation} | cut -d'/' -f5`
-dataFileName=`echo ${hdfsLocation} | cut -d'/' -f5 | cut -d'.' -f2`
+dbTableName=`echo ${hdfsLocation} | cut -d'/' -f4`
+dataFileName=`echo ${hdfsLocation} | cut -d'/' -f4 | cut -d'.' -f2`
 dirName=/home/hadoop/hyuk0628/health-care-service/extracted_dataset
 
 if ! test -d ${dirName}  ; then

@@ -1,6 +1,7 @@
 package org.bigdatacenter.dataprocessor.platform.service.hive;
 
-import org.bigdatacenter.dataprocessor.platform.domain.hive.common.HiveTask;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.task.creation.HiveCreationTask;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.task.extraction.HiveExtractionTask;
 import org.bigdatacenter.dataprocessor.platform.persistence.hive.HiveMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,12 @@ public class HiveServiceImpl implements HiveService {
     private HiveMapper hiveMapper;
 
     @Override
-    public void extractDataByHiveQL(HiveTask hiveTask) {
-        hiveMapper.extractDataByHiveQL(hiveTask);
+    public void extractDataByHiveQL(HiveExtractionTask hiveExtractionTask) {
+        hiveMapper.extractDataByHiveQL(hiveExtractionTask);
+    }
+
+    @Override
+    public void createTableByHiveQL(HiveCreationTask hiveCreationTask) {
+        hiveMapper.createTableByHiveQL(hiveCreationTask);
     }
 }

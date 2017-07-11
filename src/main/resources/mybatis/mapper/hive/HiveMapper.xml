@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.bigdatacenter.dataprocessor.platform.persistence.hive.HiveMapper">
-    <!-- void extractDataByHiveQL(@Param("hiveTask") HiveTask hiveTask) -->
+    <!-- void extractDataByHiveQL(@Param("hiveExtractionTask") HiveExtractionTask hiveExtractionTask) -->
     <select id="extractDataByHiveQL">
-        INSERT OVERWRITE DIRECTORY #{hiveTask.hdfsLocation} ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ${hiveTask.hiveQuery}
+        INSERT OVERWRITE DIRECTORY #{hiveExtractionTask.hdfsLocation} ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' ${hiveExtractionTask.hiveQuery}
+    </select>
+
+    <!-- void createTableByHiveQL(@Param("hiveCreationTask") HiveCreationTask hiveCreationTask) -->
+    <select id="createTableByHiveQL">
+        CREATE TABLE IF NOT EXISTS ${hiveCreationTask.hashedDbAndTableName} AS ${hiveCreationTask.hiveQuery}
     </select>
 </mapper>
