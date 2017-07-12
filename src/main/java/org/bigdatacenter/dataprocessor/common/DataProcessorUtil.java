@@ -4,7 +4,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * Created by hyuk0 on 2017-06-21.
+ * Created by Anthony Jinhyuk Kim on 2017-06-21.
  */
 public class DataProcessorUtil {
     public static boolean isNumeric(String value) {

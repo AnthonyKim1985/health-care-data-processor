@@ -20,24 +20,24 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableRabbit
 public class RabbitMQConfig {
-    public final static String queueName = "extraction-request-condition";
+    public final static String EXTRACTION_REQUEST_QUEUE = "extraction-request-condition";
 
     @Autowired
     private ConnectionFactory connectionFactory;
 
     @Bean
     public Queue queue() {
-        return new Queue(queueName, false);
+        return new Queue(EXTRACTION_REQUEST_QUEUE, false);
     }
 
     @Bean
     public TopicExchange exchange() {
-        return new TopicExchange(queueName + "-exchange");
+        return new TopicExchange(EXTRACTION_REQUEST_QUEUE + "-exchange");
     }
 
     @Bean
     public Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(queueName);
+        return BindingBuilder.bind(queue).to(exchange).with(EXTRACTION_REQUEST_QUEUE);
     }
 
     @Bean
@@ -49,7 +49,7 @@ public class RabbitMQConfig {
     public SimpleMessageListenerContainer container(ConnectionFactory connectionFactory, MessageListenerAdapter listenerAdapter) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
-        container.setQueueNames(queueName);
+        container.setQueueNames(EXTRACTION_REQUEST_QUEUE);
         container.setMessageListener(listenerAdapter);
         container.setMaxConcurrentConsumers(1);
         container.setReceiveTimeout(3000L);

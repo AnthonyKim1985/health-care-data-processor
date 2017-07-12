@@ -42,6 +42,10 @@ public class DataExtractionController {
     //
     @RequestMapping(value = "dataExtraction", method = RequestMethod.GET)
     public void dataExtraction(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
+        runDataExtraction(dataSetUID, httpServletResponse);
+    }
+
+    private void runDataExtraction(String dataSetUID, HttpServletResponse httpServletResponse) {
         if (!DataProcessorUtil.isNumeric(dataSetUID))
             throw new RestException(String.format(BAD_REQUEST_MESSAGE, "dataSetUID is not numeric."), httpServletResponse);
         logger.info(String.format("%s - Extraction data set UID: %s", currentThreadName, dataSetUID));
@@ -60,12 +64,22 @@ public class DataExtractionController {
             throw new RestException(String.format(BAD_REQUEST_MESSAGE, "Couldn't make the execution request object. It may be some meta data problem. Please check it out."), httpServletResponse);
         logger.info(String.format("%s - buildExtractionRequest: %s", currentThreadName, extractionRequest));
 
-        rabbitTemplate.convertAndSend(RabbitMQConfig.queueName, extractionRequest);
+        synchronized (this) {
+            rabbitTemplate.convertAndSend(RabbitMQConfig.EXTRACTION_REQUEST_QUEUE, extractionRequest);
+        }
         httpServletResponse.setStatus(HttpServletResponse.SC_OK);
     }
 
     //
-    // TODO: Health Care Scenario API
+    // TODO: Health Care Data Work-flow API
     //
-
+    @RequestMapping(value = "dataWorkFlow", method = RequestMethod.GET)
+    public void dataWorkFlow(HttpServletResponse httpServletResponse) throws InterruptedException {
+        logger.info(String.format("%s - dataWorkFlow started.", currentThreadName));
+        synchronized (this) {
+            Thread.sleep(10000L);
+        }
+        logger.info(String.format("%s - dataWorkFlow finished.", currentThreadName));
+        httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+    }
 }

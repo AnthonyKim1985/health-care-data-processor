@@ -48,35 +48,36 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
     @Override
     public void runReceiver(ExtractionRequest extractionRequest) {
         if (!validateRequest(extractionRequest)) {
-            logger.error(String.format("%s - Error occurs : extraction request list is null", currentThreadName));
+            logger.error(String.format("%s - Error occurs : extraction request is null", currentThreadName));
             return;
         }
 
-        final long jobBeginTime = System.currentTimeMillis();
         final RequestInfo requestInfo = extractionRequest.getRequestInfo();
-
-        logger.info(String.format("%s - Start RabbitMQ Message Receiver task", currentThreadName));
-
-        metadbService.updateProcessState(requestInfo.getDataSetUID(), MetadbMapper.PROCESS_STATE_PROCESSING);
-        metadbService.updateJobStartTime(requestInfo.getDataSetUID(), dateFormat.format(new Date(jobBeginTime)));
+        final int dataSetUID = requestInfo.getDataSetUID();
 
         try {
+            final long jobBeginTime = System.currentTimeMillis();
+
+            logger.info(String.format("%s - Start RabbitMQ Message Receiver task", currentThreadName));
+            metadbService.updateProcessState(dataSetUID, MetadbMapper.PROCESS_STATE_PROCESSING);
+            metadbService.updateJobStartTime(dataSetUID, dateFormat.format(new Date(jobBeginTime)));
+
             runQueryTask(extractionRequest);
             runArchiveTask(requestInfo);
+
+            final long jobEndTime = System.currentTimeMillis();
+            final long elapsedTime = jobEndTime - jobBeginTime;
+
+            logger.info(String.format("%s - All job is done, Elapsed time: %d ms", currentThreadName, elapsedTime));
+            metadbService.updateJobEndTime(dataSetUID, dateFormat.format(new Date(jobEndTime)));
+            metadbService.updateElapsedTime(dataSetUID, getElapsedTime(elapsedTime));
+            metadbService.updateProcessState(dataSetUID, MetadbMapper.PROCESS_STATE_COMPLETED);
         } catch (Exception e) {
-            logger.error(String.format("%s - Exception occurs in RabbiMQ : %s", currentThreadName, e.getMessage()));
-            rabbitAdmin.purgeQueue(RabbitMQConfig.queueName, true);
-            return;
+            rabbitAdmin.purgeQueue(RabbitMQConfig.EXTRACTION_REQUEST_QUEUE, true);
+            metadbService.updateProcessState(dataSetUID, MetadbMapper.PROCESS_STATE_REJECTED);
+            logger.error(String.format("%s - Exception occurs in RabbitMQReceiver : %s", currentThreadName, e.getMessage()));
+            logger.error(String.format("%s - The extraction request has been purged in queue. (%s)", currentThreadName, extractionRequest));
         }
-
-        final long jobEndTime = System.currentTimeMillis();
-        final long elapsedTime = jobEndTime - jobBeginTime;
-
-        logger.info(String.format("%s - All job is done, Elapsed time: %d ms", currentThreadName, elapsedTime));
-
-        metadbService.updateJobEndTime(requestInfo.getDataSetUID(), dateFormat.format(new Date(jobEndTime)));
-        metadbService.updateElapsedTime(requestInfo.getDataSetUID(), getElapsedTime(elapsedTime));
-        metadbService.updateProcessState(requestInfo.getDataSetUID(), MetadbMapper.PROCESS_STATE_COMPLETED);
     }
 
     private String getElapsedTime(long millis) {
@@ -144,6 +145,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         //
         // TODO: Update meta database
         //
+
         final String ftpURI = String.format("%s/%s", ftpLocation, archiveFileName);
         metadbService.insertFtpRequest(new FtpInfo(requestInfo.getDataSetUID(), requestInfo.getUserID(), ftpURI));
     }
