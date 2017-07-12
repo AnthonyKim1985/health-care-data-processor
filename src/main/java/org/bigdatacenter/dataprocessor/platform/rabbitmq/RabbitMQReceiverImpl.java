@@ -64,7 +64,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
             runQueryTask(extractionRequest);
             runArchiveTask(requestInfo);
         } catch (Exception e) {
-            logger.error(String.format("%s - Exception occurs: %s", currentThreadName, e.getMessage()));
+            logger.error(String.format("%s - Exception occurs in RabbiMQ : %s", currentThreadName, e.getMessage()));
             rabbitAdmin.purgeQueue(RabbitMQConfig.queueName, true);
             return;
         }
