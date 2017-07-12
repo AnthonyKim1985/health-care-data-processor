@@ -10,8 +10,10 @@ import org.bigdatacenter.dataprocessor.platform.persistence.metadb.MetadbMapper;
 import org.bigdatacenter.dataprocessor.platform.resolver.script.ShellScriptResolver;
 import org.bigdatacenter.dataprocessor.platform.service.hive.HiveService;
 import org.bigdatacenter.dataprocessor.platform.service.metadb.MetadbService;
+import org.bigdatacenter.dataprocessor.springboot.config.RabbitMQConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +42,9 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
     @Autowired
     private ShellScriptResolver shellScriptResolver;
 
+    @Autowired
+    private RabbitAdmin rabbitAdmin;
+
     @Override
     public void runReceiver(ExtractionRequest extractionRequest) {
         if (!validateRequest(extractionRequest)) {
@@ -55,8 +60,14 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         metadbService.updateProcessState(requestInfo.getDataSetUID(), MetadbMapper.PROCESS_STATE_PROCESSING);
         metadbService.updateJobStartTime(requestInfo.getDataSetUID(), dateFormat.format(new Date(jobBeginTime)));
 
-        runQueryTask(extractionRequest);
-        runArchiveTask(requestInfo);
+        try {
+            runQueryTask(extractionRequest);
+            runArchiveTask(requestInfo);
+        } catch (Exception e) {
+            logger.error(String.format("%s - Exception occurs: %s", currentThreadName, e.getMessage()));
+            rabbitAdmin.purgeQueue(RabbitMQConfig.queueName, true);
+            return;
+        }
 
         final long jobEndTime = System.currentTimeMillis();
         final long elapsedTime = jobEndTime - jobBeginTime;
