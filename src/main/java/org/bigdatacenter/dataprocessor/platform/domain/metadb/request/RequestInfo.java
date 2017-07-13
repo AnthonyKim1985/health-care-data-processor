@@ -38,4 +38,8 @@ public class RequestInfo implements Serializable {
     private String versionInfo;
     private Byte delState;
     private Integer datasetID;
+    private String jobStartTime;
+    private String jobEndTime;
+    private String elapsedTime;
+    private Integer joinCondition;
 }
