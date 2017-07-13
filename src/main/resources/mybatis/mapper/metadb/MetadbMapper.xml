@@ -79,7 +79,7 @@
 
     <!-- List<String> readEngColumnNames(@Param("etl_eng_name") String etlEngName) -->
     <select id="readEngColumnNames" resultType="java.lang.String">
-        SELECT ecl_eng_name FROM health_care_ui.chu_col_list WHERE etl_idx=(SELECT etl_idx FROM health_care_ui.chu_tb_list WHERE etl_eng_name=#{etl_eng_name});
+        SELECT DISTINCT ecl_eng_name FROM health_care_ui.chu_col_list WHERE etl_idx=(SELECT etl_idx FROM health_care_ui.chu_tb_list WHERE etl_eng_name=#{etl_eng_name});
     </select>
 
 

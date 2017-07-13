@@ -101,13 +101,12 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
         for (String dbAndTableName : parameterMap.keySet()) {
             StringBuilder hiveQueryBuilder = new StringBuilder();
             String header = indicatorHeader == null ? getHeader(dbAndTableName) : indicatorHeader;
-            if (indicatorHeader == null)
+            if (header == null)
                 return null;
 
             hiveQueryBuilder.append(String.format("SELECT %s FROM %s", header, dbAndTableName));
 
             Map<String/*column*/, List<String>/*values*/> conditionMap = parameterMap.get(dbAndTableName);
-
             List<String> columnNameList = new ArrayList<>();
             columnNameList.addAll(conditionMap.keySet());
 
