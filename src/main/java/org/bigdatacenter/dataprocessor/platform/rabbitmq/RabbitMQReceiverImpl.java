@@ -111,15 +111,17 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
             logger.info(String.format("%s - Start table creation at Hive Query: %s", currentThreadName, hiveCreationTask.getHiveQuery()));
             hiveService.createTableByHiveQL(hiveCreationTask);
 
-            logger.info(String.format("%s - Start data extraction at Hive Query: %s", currentThreadName, hiveExtractionTask.getHiveQuery()));
-            hiveService.extractDataByHiveQL(hiveExtractionTask);
+            if (hiveExtractionTask != null) {
+                logger.info(String.format("%s - Start data extraction at Hive Query: %s", currentThreadName, hiveExtractionTask.getHiveQuery()));
+                hiveService.extractDataByHiveQL(hiveExtractionTask);
 
-            //
-            // TODO: Merge Reducer output files in HDFS, download merged file to local file system.
-            //
-            final String hdfsLocation = hiveExtractionTask.getHdfsLocation();
-            final String header = hiveExtractionTask.getHeader();
-            shellScriptResolver.runReducePartsMerger(hdfsLocation, header);
+                //
+                // TODO: Merge Reducer output files in HDFS, download merged file to local file system.
+                //
+                final String hdfsLocation = hiveExtractionTask.getHdfsLocation();
+                final String header = hiveExtractionTask.getHeader();
+                shellScriptResolver.runReducePartsMerger(hdfsLocation, header);
+            }
 
             //
             // TODO: Update transaction database
@@ -134,7 +136,7 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
         //
         // TODO: Archive the extracted data set and finally send the file to FTP server.
         //
-        final String archiveFileName = String.format("archive_%s_%s.tar.gz", requestInfo.getUserID(), String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
+        final String archiveFileName = String.format("%s_%s.tar.gz", requestInfo.getUserID(), String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
         final String ftpLocation = String.format("/%s/%s", requestInfo.getUserID(), requestInfo.getDatasetName());
 
         final long archiveFileBeginTime = System.currentTimeMillis();

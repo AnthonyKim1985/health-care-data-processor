@@ -3,6 +3,7 @@ package org.bigdatacenter.dataprocessor.platform.resolver.query;
 import org.bigdatacenter.dataprocessor.common.DataProcessorUtil;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.ExtractionRequest;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.parameter.HiveJoinParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.HiveTask;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.creation.HiveCreationTask;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.extraction.HiveExtractionTask;
@@ -44,26 +45,34 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
 
         // TODO: find request
         RequestInfo requestInfo = metadbService.findRequest(dataSetUID);
-        if (requestInfo == null)
+        if (requestInfo == null) {
+            logger.error(String.format("%s - RequestInfo not found", currentThreadName));
             return null;
+        }
 
         // TODO: find request year
         List<RequestYearInfo> requestYearInfoList = metadbService.findRequestYears(dataSetUID);
-        if (requestYearInfoList == null)
+        if (requestYearInfoList == null) {
+            logger.error(String.format("%s - RequestYearInfo not found", currentThreadName));
             return null;
+        }
 
         // TODO: find request filters
         List<RequestFilterInfo> requestFilterInfoList = metadbService.findRequestFilters(dataSetUID);
-        if (requestFilterInfoList == null)
+        if (requestFilterInfoList == null) {
+            logger.error(String.format("%s - FilterInfo not found", currentThreadName));
             return null;
+        }
 
         // TODO: find request indicator
         String indicator = takeIndicatorTask(dataSetUID);
 
         // TODO: find database
         MetaDatabaseInfo metaDatabaseInfo = metadbService.findMetaDatabase(requestInfo.getDatasetID());
-        if (metaDatabaseInfo == null)
+        if (metaDatabaseInfo == null) {
+            logger.error(String.format("%s - Meta Database not found", currentThreadName));
             return null;
+        }
 
         // TODO: make tasks
         for (RequestYearInfo requestYearInfo : requestYearInfoList) {
@@ -78,8 +87,10 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                         continue;
 
                     String filterValues = requestFilterInfo.getFilterValues();
-                    if (filterValues == null)
+                    if (filterValues == null) {
+                        logger.error(String.format("%s - FilterValue is null", currentThreadName));
                         return null;
+                    }
 
                     for (String value : filterValues.split("[,]"))
                         taskInfoList.add(new TaskInfo(metaDatabaseInfo.getEdl_eng_name(), metaTableInfo.getEtl_eng_name(), metaColumnInfo.getEcl_eng_name(), value));
@@ -94,16 +105,27 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
     public ExtractionRequest buildExtractionRequest(ExtractionParameter extractionParameter) {
         final RequestInfo requestInfo = extractionParameter.getRequestInfo();
         final Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = extractionParameter.getParameterMap();
+
         final Integer dataSetUID = requestInfo.getDataSetUID();
         final String indicatorHeader = extractionParameter.getIndicator();
+
         final List<HiveTask> hiveTaskList = new ArrayList<>();
+        final Map<String, List<HiveJoinParameter>> hiveJoinParameterListMap = new HashMap<>();
 
         for (String dbAndTableName : parameterMap.keySet()) {
-            StringBuilder hiveQueryBuilder = new StringBuilder();
-            String header = indicatorHeader == null ? getHeader(dbAndTableName) : indicatorHeader;
-            if (header == null)
-                return null;
+            if (dbAndTableName.contains("ykiho")) {
+                logger.warn(String.format("%s - ykiho has been skipped", currentThreadName));
+                continue;
+            }
 
+            StringBuilder hiveQueryBuilder = new StringBuilder();
+            final String header = (indicatorHeader == null ? getHeader(dbAndTableName) : indicatorHeader);
+            if (header == null) {
+                logger.error(String.format("%s - header is null at buildExtractionRequest", currentThreadName));
+                return null;
+            }
+
+            logger.debug(String.format("%s - header in buildExtractionRequest: %s", currentThreadName, header));
             hiveQueryBuilder.append(String.format("SELECT %s FROM %s", header, dbAndTableName));
 
             Map<String/*column*/, List<String>/*values*/> conditionMap = parameterMap.get(dbAndTableName);
@@ -114,24 +136,120 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                 hiveQueryBuilder.append(buildWhereClause(columnNameList, conditionMap));
 
             try {
-                // /tmp/health_care/{dataSetUID}/{dbAndTableName}/{timeStamp}
-                final String hdfsLocation = String.format("/tmp/health_care/%s/%d/%s", dbAndTableName,
-                        dataSetUID, String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
-
                 final String dbName = dbAndTableName.split("[.]")[0];
-                final String hiveQuery = hiveQueryBuilder.toString();
-                final String hashedDbAndTableName = String.format("%s_extracted.%s_%s", dbName, dbName, DataProcessorUtil.getHashedString(hiveQuery)); // hashed value for hiveQuery
+                final String tableName = dbAndTableName.split("[.]")[1];
 
+                final String hiveQuery = hiveQueryBuilder.toString();
+                final String hashedDbAndTableName = String.format("%s_extracted.%s_%s", dbName, tableName, DataProcessorUtil.getHashedString(hiveQuery)); // hashed value for hiveQuery
                 final HiveCreationTask hiveCreationTask = new HiveCreationTask(hashedDbAndTableName, hiveQuery);
-                final HiveExtractionTask hiveExtractionTask = new HiveExtractionTask(hdfsLocation, String.format("SELECT * FROM %s", hashedDbAndTableName), header);
-                hiveTaskList.add(new HiveTask(hiveCreationTask, hiveExtractionTask));
+
+                switch (requestInfo.getJoinCondition()) {
+                    case 0: // No Join Query
+                        // /tmp/health_care/{dbAndTableName}/{dataSetUID}/{timeStamp}
+                        final String hdfsLocation = String.format("/tmp/health_care/%s/%d/%s", dbAndTableName,
+                                dataSetUID, String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
+                        final HiveExtractionTask hiveExtractionTask = new HiveExtractionTask(hdfsLocation, String.format("SELECT * FROM %s", hashedDbAndTableName), header);
+                        hiveTaskList.add(new HiveTask(hiveCreationTask, hiveExtractionTask));
+                        break;
+                    case 1: // Join Query with KEY_SEQ
+                    case 2: // Join Query with PERSON_ID
+                        final String tableNameSplitted[] = tableName.split("[_]");
+                        final String mapKey = tableNameSplitted[tableNameSplitted.length - 1];
+
+                        List<HiveJoinParameter> hiveJoinParameterList = hiveJoinParameterListMap.get(mapKey);
+                        if (hiveJoinParameterList == null) {
+                            hiveJoinParameterList = new ArrayList<>();
+                            hiveJoinParameterList.add(new HiveJoinParameter(dbName, tableName, hashedDbAndTableName, header));
+                            hiveJoinParameterListMap.put(mapKey, hiveJoinParameterList);
+                        } else {
+                            hiveJoinParameterList.add(new HiveJoinParameter(dbName, tableName, hashedDbAndTableName, header));
+                        }
+                        hiveTaskList.add(new HiveTask(hiveCreationTask, null));
+                        break;
+                    default:
+                        logger.error(String.format("%s - invalid join condition: %d", currentThreadName, requestInfo.getJoinCondition()));
+                }
             } catch (Exception e) {
-                logger.warn(String.format("%s - split exception occurs at dbAndTableName", currentThreadName));
+                logger.error(String.format("%s - split exception occurs at dbAndTableName", currentThreadName));
                 return null;
             }
         }
 
+        for (String key : hiveJoinParameterListMap.keySet())
+            if (!runHiveJoinTasks(hiveTaskList, hiveJoinParameterListMap.get(key), requestInfo.getJoinCondition(), dataSetUID))
+                return null;
+
         return new ExtractionRequest(requestInfo, extractionParameter.getIndicator(), hiveTaskList);
+    }
+
+    private boolean runHiveJoinTasks(List<HiveTask> hiveTaskList, List<HiveJoinParameter> hiveJoinParameterList, Integer joinCondition, Integer dataSetUID) {
+        try {
+            switch (joinCondition) {
+                case 1: // Take join operation by KEY_SEQ
+                    hiveTaskList.addAll(getHiveJoinTasks(hiveJoinParameterList, "key_seq", dataSetUID));
+                    break;
+                case 2: // Take join operation by PERSON_ID
+                    hiveTaskList.addAll(getHiveJoinTasks(hiveJoinParameterList, "person_id", dataSetUID));
+                    break;
+            }
+        } catch (Exception e) {
+            logger.error(String.format("%s - split exception occurs at getHiveJoinTasks: %s", currentThreadName, e.getMessage()));
+            return false;
+        }
+        return true;
+    }
+
+    private List<HiveTask> getHiveJoinTasks(List<HiveJoinParameter> hiveJoinParameterList, String joinKey, Integer dataSetUID) {
+        final List<HiveTask> hiveTaskList = new ArrayList<>();
+
+        for (int i = 0; i < hiveJoinParameterList.size(); i++) {
+            HiveJoinParameter hiveJoinParameter = hiveJoinParameterList.get(i);
+
+            final String hiveJoinQuery = getHiveJoinQuery(sortParameterList(hiveJoinParameterList, i), joinKey);
+            final String hashedTableName = String.format("%s_%s", hiveJoinParameter.getTableName(), DataProcessorUtil.getHashedString(hiveJoinQuery));
+            final String integratedHashedDbAndTableName = String.format("%s_join_%s_integrated.%s", hiveJoinParameter.getDbName(), joinKey, hashedTableName);
+
+            logger.info(String.format("%s - HiveJoinQuery: %s", currentThreadName, hiveJoinQuery));
+            logger.info(String.format("%s - HashedTableName: %s", currentThreadName, hashedTableName));
+
+            // /tmp/health_care/{dbAndTableName}/{dataSetUID}/{timeStamp}
+            final String hdfsLocation = String.format("/tmp/health_care/%s.%s/%d/%s", hiveJoinParameter.getDbName(), hiveJoinParameter.getTableName(),
+                    dataSetUID, String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
+            final HiveCreationTask hiveCreationTask = new HiveCreationTask(integratedHashedDbAndTableName, hiveJoinQuery);
+            final HiveExtractionTask hiveExtractionTask = new HiveExtractionTask(hdfsLocation, String.format("SELECT * FROM %s", integratedHashedDbAndTableName), hiveJoinParameter.getHeader());
+
+            hiveTaskList.add(new HiveTask(hiveCreationTask, hiveExtractionTask));
+        }
+
+        return hiveTaskList;
+    }
+
+    private List<HiveJoinParameter> sortParameterList(List<HiveJoinParameter> hiveJoinParameterList, int entryIndex) {
+        final List<HiveJoinParameter> sortedHiveJoinParameterList = new ArrayList<>();
+
+        sortedHiveJoinParameterList.add(hiveJoinParameterList.get(entryIndex));
+
+        for (int i = 0; i < hiveJoinParameterList.size(); i++) {
+            if (i == entryIndex) continue;
+            HiveJoinParameter hiveJoinParameter = hiveJoinParameterList.get(i);
+            sortedHiveJoinParameterList.add(hiveJoinParameter);
+        }
+        return sortedHiveJoinParameterList;
+    }
+
+    private String getHiveJoinQuery(List<HiveJoinParameter> hiveJoinParameterList, String joinKey) {
+        final StringBuilder joinQueryBuilder = new StringBuilder();
+        final String entryAlias = hiveJoinParameterList.get(0).getHashedDbAndTableName().split("[.]")[1].split("[_]")[3];
+        joinQueryBuilder.append(String.format("SELECT DISTINCT %s.* FROM %s %s", entryAlias, hiveJoinParameterList.get(0).getHashedDbAndTableName(), entryAlias));
+
+        for (int i = 0; i < hiveJoinParameterList.size() - 1; i++) {
+            final String currentAlias = hiveJoinParameterList.get(i).getHashedDbAndTableName().split("[.]")[1].split("[_]")[3];
+            final String nextAlias = hiveJoinParameterList.get(i + 1).getHashedDbAndTableName().split("[.]")[1].split("[_]")[3];
+
+            joinQueryBuilder.append(String.format(" INNER JOIN %s %s ON (%s.%s = %s.%s)", hiveJoinParameterList.get(i + 1).getHashedDbAndTableName(), nextAlias, currentAlias, joinKey, nextAlias, joinKey));
+        }
+
+        return joinQueryBuilder.toString();
     }
 
     private String takeIndicatorTask(Integer dataSetUID) {
@@ -206,11 +324,12 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
 
             List<String> headerList = metadbService.findEngColumnNames(tableName);
             for (int i = 0; i < headerList.size(); i++) {
-                headerBuilder.append(headerList.get(i));
+                headerBuilder.append(headerList.get(i).trim());
                 if (i < headerList.size() - 1)
                     headerBuilder.append(',');
             }
         } catch (Exception e) {
+            logger.warn(String.format("%s - invalid dbAndTableName: %s", currentThreadName, dbAndTableName));
             return null;
         }
         return headerBuilder.toString();
