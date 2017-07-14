@@ -143,12 +143,13 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
             }
         }
 
-        try {
-            hiveTaskList.addAll(buildHiveJoinTasks(hiveJoinParameterListMap, requestInfo.getJoinCondition(), dataSetUID));
-        } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
-            logger.error(String.format("%s - During the building hive join tasks, exception occurs: hiveJoinTasks are null.", currentThreadName));
-            return null;
-        }
+        if (requestInfo.getJoinCondition() > 0)
+            try {
+                hiveTaskList.addAll(buildHiveJoinTasks(hiveJoinParameterListMap, requestInfo.getJoinCondition(), dataSetUID));
+            } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
+                logger.error(String.format("%s - During the building hive join tasks, exception occurs: hiveJoinTasks are null.", currentThreadName));
+                return null;
+            }
 
         return new ExtractionRequest(requestInfo, extractionParameter.getIndicator(), hiveTaskList);
     }
