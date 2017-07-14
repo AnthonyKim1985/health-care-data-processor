@@ -194,6 +194,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
             logger.error(String.format("%s - split exception occurs at dbAndTableName", currentThreadName));
             throw new ArrayIndexOutOfBoundsException();
         }
+
         return hiveTask;
     }
 
@@ -219,6 +220,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                 throw new ArrayIndexOutOfBoundsException();
             }
         }
+
         return hiveTaskList;
     }
 
@@ -257,6 +259,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
             HiveJoinParameter hiveJoinParameter = hiveJoinParameterList.get(i);
             sortedHiveJoinParameterList.add(hiveJoinParameter);
         }
+
         return sortedHiveJoinParameterList;
     }
 
@@ -335,6 +338,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                 }
             }
         }
+
         return parameterMap;
     }
 
@@ -355,6 +359,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
             logger.warn(String.format("%s - invalid dbAndTableName: %s", currentThreadName, dbAndTableName));
             return null;
         }
+
         return headerBuilder.toString();
     }
 
@@ -385,6 +390,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
             if (columnIndex < columnNameList.size() - 1)
                 hiveWhereClauseBuilder.append(" AND ");
         }
+
         return hiveWhereClauseBuilder.toString();
     }
 
