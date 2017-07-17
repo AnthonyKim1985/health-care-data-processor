@@ -132,17 +132,21 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
             List<String> columnNameList = new ArrayList<>();
             columnNameList.addAll(conditionMap.keySet());
 
+            Integer joinCondition = 0; /* requestInfo.getJoinCondition(); // Requirement changed: Not Use Join Operation */
+
             if (columnNameList.size() > 0)
                 hiveQueryBuilder.append(buildWhereClause(columnNameList, conditionMap));
 
             try {
-                hiveTaskList.add(buildHiveTask(hiveJoinParameterListMap, hiveQueryBuilder.toString(), dbAndTableName, dataSetUID, requestInfo.getJoinCondition(), header));
+                hiveTaskList.add(buildHiveTask(hiveJoinParameterListMap, hiveQueryBuilder.toString(),
+                        dbAndTableName, dataSetUID, joinCondition, header));
             } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
                 logger.error(String.format("%s - During the building hive task, exception occurs: hiveTask is null.", currentThreadName));
                 return null;
             }
         }
 
+        /* Requirement changed: Not Use Join Operation */
         if (requestInfo.getJoinCondition() > 0)
             try {
                 hiveTaskList.addAll(buildHiveJoinTasks(hiveJoinParameterListMap, requestInfo.getJoinCondition(), dataSetUID));
