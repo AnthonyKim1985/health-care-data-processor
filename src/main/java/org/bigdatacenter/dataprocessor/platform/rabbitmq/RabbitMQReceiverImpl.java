@@ -47,36 +47,36 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
 
     @Override
     public void runReceiver(ExtractionRequest extractionRequest) {
-        if (!validateRequest(extractionRequest)) {
-            logger.error(String.format("%s - Error occurs : extraction request is null", currentThreadName));
-            return;
-        }
-
         final RequestInfo requestInfo = extractionRequest.getRequestInfo();
         final int dataSetUID = requestInfo.getDataSetUID();
 
-        try {
-            final long jobBeginTime = System.currentTimeMillis();
+        if (validateRequest(extractionRequest)) {
+            try {
+                final long jobBeginTime = System.currentTimeMillis();
 
-            logger.info(String.format("%s - Start RabbitMQ Message Receiver task", currentThreadName));
-            metadbService.updateProcessState(dataSetUID, MetadbMapper.PROCESS_STATE_PROCESSING);
-            metadbService.updateJobStartTime(dataSetUID, dateFormat.format(new Date(jobBeginTime)));
+                logger.info(String.format("%s - Start RabbitMQ Message Receiver task", currentThreadName));
+                metadbService.updateProcessState(dataSetUID, MetadbMapper.PROCESS_STATE_PROCESSING);
+                metadbService.updateJobStartTime(dataSetUID, dateFormat.format(new Date(jobBeginTime)));
 
-            runQueryTask(extractionRequest);
-            runArchiveTask(requestInfo);
+                runQueryTask(extractionRequest);
+                runArchiveTask(requestInfo);
 
-            final long jobEndTime = System.currentTimeMillis();
-            final long elapsedTime = jobEndTime - jobBeginTime;
+                final long jobEndTime = System.currentTimeMillis();
+                final long elapsedTime = jobEndTime - jobBeginTime;
 
-            logger.info(String.format("%s - All job is done, Elapsed time: %d ms", currentThreadName, elapsedTime));
-            metadbService.updateJobEndTime(dataSetUID, dateFormat.format(new Date(jobEndTime)));
-            metadbService.updateElapsedTime(dataSetUID, getElapsedTime(elapsedTime));
-            metadbService.updateProcessState(dataSetUID, MetadbMapper.PROCESS_STATE_COMPLETED);
-        } catch (Exception e) {
-            rabbitAdmin.purgeQueue(RabbitMQConfig.EXTRACTION_REQUEST_QUEUE, true);
+                logger.info(String.format("%s - All job is done, Elapsed time: %d ms", currentThreadName, elapsedTime));
+                metadbService.updateJobEndTime(dataSetUID, dateFormat.format(new Date(jobEndTime)));
+                metadbService.updateElapsedTime(dataSetUID, getElapsedTime(elapsedTime));
+                metadbService.updateProcessState(dataSetUID, MetadbMapper.PROCESS_STATE_COMPLETED);
+            } catch (Exception e) {
+                rabbitAdmin.purgeQueue(RabbitMQConfig.EXTRACTION_REQUEST_QUEUE, true);
+                metadbService.updateProcessState(dataSetUID, MetadbMapper.PROCESS_STATE_REJECTED);
+                logger.error(String.format("%s - Exception occurs in RabbitMQReceiver : %s", currentThreadName, e.getMessage()));
+                logger.error(String.format("%s - The extraction request has been purged in queue. (%s)", currentThreadName, extractionRequest));
+            }
+        } else {
             metadbService.updateProcessState(dataSetUID, MetadbMapper.PROCESS_STATE_REJECTED);
-            logger.error(String.format("%s - Exception occurs in RabbitMQReceiver : %s", currentThreadName, e.getMessage()));
-            logger.error(String.format("%s - The extraction request has been purged in queue. (%s)", currentThreadName, extractionRequest));
+            logger.error(String.format("%s - Drop the job. (%s)", currentThreadName, extractionRequest));
         }
     }
 
@@ -88,11 +88,13 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
     }
 
     private boolean validateRequest(ExtractionRequest extractionRequest) {
-        if (extractionRequest == null)
+        if (extractionRequest == null) {
+            logger.error(String.format("%s - Error occurs at RabbitMQReceiver: extraction request is null", currentThreadName));
             return false;
-        else if (extractionRequest.getHiveTaskList().size() == 0)
+        } else if (extractionRequest.getHiveTaskList().size() == 0) {
+            logger.error(String.format("%s - Error occurs at RabbitMQReceiver: There are no Hive tasks to process.", currentThreadName));
             return false;
-
+        }
         return true;
     }
 
