@@ -18,8 +18,15 @@ if ! test -d ${dirName}/${ftpLocation} ; then
     mkdir -p ${dirName}/${ftpLocation}
 fi
 
-#zip ${dirName}/${ftpLocation}/${archiveFileName}.zip ./*.csv
-tar zcvf ${dirName}/${ftpLocation}/${archiveFileName}.tar.gz ./*.csv
+count=$(ls ${datasetDirName} | wc -l)
+
+if [[ ${count} =~ 0 ]]; then
+    echo "file not found!"
+    echo "No data was found that satisfied the criteria you entered. Please try again." > README.txt
+fi
+
+#zip ${dirName}/${ftpLocation}/${archiveFileName} ./*
+tar zcvf ${dirName}/${ftpLocation}/${archiveFileName} ./*
 
 # Delete uncompressed raw data set
 rm -rf ${datasetDirName}/*
