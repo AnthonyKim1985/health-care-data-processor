@@ -87,8 +87,10 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
 
                 for (MetaColumnInfo metaColumnInfo : metaColumnInfoList) {
                     MetaTableInfo metaTableInfo = metadbService.findMetaTable(metaColumnInfo.getEtl_idx());
-                    if (metaTableInfo == null)
+                    if (metaTableInfo == null) {
+                        logger.warn(String.format("%s - The meta information for the table could not be found. (etl_idx: %d)", currentThreadName, metaColumnInfo.getEtl_idx()));
                         continue;
+                    }
 
                     String filterValues = requestFilterInfo.getFilterValues();
                     if (filterValues == null) {

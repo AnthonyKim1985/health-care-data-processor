@@ -65,16 +65,21 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
         final String hashedDbAndTableName = hiveJoinParameter.getHashedDbAndTableName();
         final String header = hiveJoinParameter.getHeader();
 
-        final String tableNameSplitted[] = tableName.split("[_]");
-        final String mapKey = tableNameSplitted[tableNameSplitted.length - 1];
+        try {
+            final String tableNameSplitted[] = tableName.split("[_]");
+            final String mapKey = tableNameSplitted[tableNameSplitted.length - 1];
 
-        List<HiveJoinParameter> hiveJoinParameterList = hiveJoinParameterListMap.get(mapKey);
-        if (hiveJoinParameterList == null) {
-            hiveJoinParameterList = new ArrayList<>();
-            hiveJoinParameterList.add(new HiveJoinParameter(dbName, tableName, hashedDbAndTableName, header));
-            hiveJoinParameterListMap.put(mapKey, hiveJoinParameterList);
-        } else {
-            hiveJoinParameterList.add(new HiveJoinParameter(dbName, tableName, hashedDbAndTableName, header));
+            List<HiveJoinParameter> hiveJoinParameterList = hiveJoinParameterListMap.get(mapKey);
+            if (hiveJoinParameterList == null) {
+                hiveJoinParameterList = new ArrayList<>();
+                hiveJoinParameterList.add(new HiveJoinParameter(dbName, tableName, hashedDbAndTableName, header));
+                hiveJoinParameterListMap.put(mapKey, hiveJoinParameterList);
+            } else {
+                hiveJoinParameterList.add(new HiveJoinParameter(dbName, tableName, hashedDbAndTableName, header));
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            logger.error(String.format("%s - Exception occurs at buildHiveJoinTask: %s", currentThreadName, e.getMessage()));
+            throw new ArrayIndexOutOfBoundsException(e.getMessage());
         }
 
         return new HiveTask(hiveCreationTask, null);
@@ -86,20 +91,25 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
         for (int i = 0; i < hiveJoinParameterList.size(); i++) {
             HiveJoinParameter hiveJoinParameter = hiveJoinParameterList.get(i);
 
-            final String hiveJoinQuery = getHiveJoinQuery(sortParameterList(hiveJoinParameterList, i), joinKey);
-            final String hashedTableName = String.format("%s_%s", hiveJoinParameter.getTableName(), DataProcessorUtil.getHashedString(hiveJoinQuery));
-            final String integratedHashedDbAndTableName = String.format("%s_join_%s_integrated.%s", hiveJoinParameter.getDbName(), joinKey, hashedTableName);
+            try {
+                final String hiveJoinQuery = getHiveJoinQuery(sortParameterList(hiveJoinParameterList, i), joinKey);
+                final String hashedTableName = String.format("%s_%s", hiveJoinParameter.getTableName(), DataProcessorUtil.getHashedString(hiveJoinQuery));
+                final String integratedHashedDbAndTableName = String.format("%s_join_%s_integrated.%s", hiveJoinParameter.getDbName(), joinKey, hashedTableName);
 
-            logger.info(String.format("%s - HiveJoinQuery: %s", currentThreadName, hiveJoinQuery));
-            logger.info(String.format("%s - HashedTableName: %s", currentThreadName, hashedTableName));
+                logger.info(String.format("%s - HiveJoinQuery: %s", currentThreadName, hiveJoinQuery));
+                logger.info(String.format("%s - HashedTableName: %s", currentThreadName, hashedTableName));
 
-            // /tmp/health_care/{dbAndTableName}/{dataSetUID}/{timeStamp}
-            final String hdfsLocation = String.format("/tmp/health_care/%s.%s/%d/%s", hiveJoinParameter.getDbName(), hiveJoinParameter.getTableName(),
-                    dataSetUID, String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
-            final HiveCreationTask hiveCreationTask = new HiveCreationTask(integratedHashedDbAndTableName, hiveJoinQuery);
-            final HiveExtractionTask hiveExtractionTask = new HiveExtractionTask(hdfsLocation, String.format("SELECT * FROM %s", integratedHashedDbAndTableName), hiveJoinParameter.getHeader());
+                // /tmp/health_care/{dbAndTableName}/{dataSetUID}/{timeStamp}
+                final String hdfsLocation = String.format("/tmp/health_care/%s.%s/%d/%s", hiveJoinParameter.getDbName(), hiveJoinParameter.getTableName(),
+                        dataSetUID, String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
+                final HiveCreationTask hiveCreationTask = new HiveCreationTask(integratedHashedDbAndTableName, hiveJoinQuery);
+                final HiveExtractionTask hiveExtractionTask = new HiveExtractionTask(hdfsLocation, String.format("SELECT * FROM %s", integratedHashedDbAndTableName), hiveJoinParameter.getHeader());
 
-            hiveTaskList.add(new HiveTask(hiveCreationTask, hiveExtractionTask));
+                hiveTaskList.add(new HiveTask(hiveCreationTask, hiveExtractionTask));
+            } catch (ArrayIndexOutOfBoundsException e) {
+                logger.error(String.format("%s - Exception occurs at getHiveJoinTasks: %s", currentThreadName, e.getMessage()));
+                throw new ArrayIndexOutOfBoundsException(e.getMessage());
+            }
         }
 
         return hiveTaskList;
@@ -121,14 +131,20 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
 
     private String getHiveJoinQuery(List<HiveJoinParameter> hiveJoinParameterList, String joinKey) {
         final StringBuilder joinQueryBuilder = new StringBuilder();
-        final String entryAlias = hiveJoinParameterList.get(0).getHashedDbAndTableName().split("[.]")[1].split("[_]")[3];
-        joinQueryBuilder.append(String.format("SELECT DISTINCT %s.* FROM %s %s", entryAlias, hiveJoinParameterList.get(0).getHashedDbAndTableName(), entryAlias));
 
-        for (int i = 0; i < hiveJoinParameterList.size() - 1; i++) {
-            final String currentAlias = hiveJoinParameterList.get(i).getHashedDbAndTableName().split("[.]")[1].split("[_]")[3];
-            final String nextAlias = hiveJoinParameterList.get(i + 1).getHashedDbAndTableName().split("[.]")[1].split("[_]")[3];
+        try {
+            final String entryAlias = hiveJoinParameterList.get(0).getHashedDbAndTableName().split("[.]")[1].split("[_]")[3];
+            joinQueryBuilder.append(String.format("SELECT DISTINCT %s.* FROM %s %s", entryAlias, hiveJoinParameterList.get(0).getHashedDbAndTableName(), entryAlias));
 
-            joinQueryBuilder.append(String.format(" INNER JOIN %s %s ON (%s.%s = %s.%s)", hiveJoinParameterList.get(i + 1).getHashedDbAndTableName(), nextAlias, currentAlias, joinKey, nextAlias, joinKey));
+            for (int i = 0; i < hiveJoinParameterList.size() - 1; i++) {
+                final String currentAlias = hiveJoinParameterList.get(i).getHashedDbAndTableName().split("[.]")[1].split("[_]")[3];
+                final String nextAlias = hiveJoinParameterList.get(i + 1).getHashedDbAndTableName().split("[.]")[1].split("[_]")[3];
+
+                joinQueryBuilder.append(String.format(" INNER JOIN %s %s ON (%s.%s = %s.%s)", hiveJoinParameterList.get(i + 1).getHashedDbAndTableName(), nextAlias, currentAlias, joinKey, nextAlias, joinKey));
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            logger.error(String.format("%s - Exception occurs at getHiveJoinQuery: %s", currentThreadName, e.getMessage()));
+            throw new ArrayIndexOutOfBoundsException(e.getMessage());
         }
 
         return joinQueryBuilder.toString();
