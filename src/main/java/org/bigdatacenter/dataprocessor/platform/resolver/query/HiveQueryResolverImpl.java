@@ -222,8 +222,10 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                 indicatorBuilder.append(',');
         }
 
-        if (indicatorBuilder.toString().length() == 0)
+        if (indicatorBuilder.toString().length() == 0) {
+            logger.error(String.format("%s - The length of indicatorBuilder is 0 at takeIndicatorTask.", currentThreadName));
             return null;
+        }
 
         return indicatorBuilder.toString();
     }
@@ -265,8 +267,10 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
         StringBuilder headerBuilder = new StringBuilder();
         try {
             String tableName = dbAndTableName.split("[.]")[1];
-            if (tableName == null)
+            if (tableName == null) {
+                logger.error(String.format("%s - tableName is null at getHeader.", currentThreadName));
                 return null;
+            }
 
             List<String> headerList = metadbService.findEngColumnNames(tableName);
             for (int i = 0; i < headerList.size(); i++) {
@@ -275,7 +279,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                     headerBuilder.append(',');
             }
         } catch (Exception e) {
-            logger.warn(String.format("%s - invalid dbAndTableName: %s", currentThreadName, dbAndTableName));
+            logger.error(String.format("%s - invalid dbAndTableName: %s", currentThreadName, dbAndTableName));
             return null;
         }
 
@@ -290,8 +294,10 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
             String columnName = columnNameList.get(columnIndex);
             List<String> values = conditionMap.get(columnName);
 
-            if (values == null || values.size() == 0)
+            if (values == null || values.size() == 0) {
+                logger.error(String.format("%s - Any values are not found at buildWhereClause. (key: %s)", currentThreadName, columnName));
                 return null;
+            }
 
             if (values.size() == 1) {
                 hiveWhereClauseBuilder.append(getEquality(columnName, values.get(0)));
