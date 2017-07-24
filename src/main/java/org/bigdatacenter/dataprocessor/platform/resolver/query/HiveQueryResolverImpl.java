@@ -111,12 +111,9 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
     public ExtractionRequest buildExtractionRequest(ExtractionParameter extractionParameter) {
         final RequestInfo requestInfo = extractionParameter.getRequestInfo();
         final Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = extractionParameter.getParameterMap();
-
-        final Integer dataSetUID = requestInfo.getDataSetUID();
-        final String indicatorHeader = extractionParameter.getIndicator();
-
         final List<HiveTask> hiveTaskList = new ArrayList<>();
 
+        final String indicatorHeader = extractionParameter.getIndicator();
 
         for (String dbAndTableName : parameterMap.keySet()) {
             if (dbAndTableName.contains("ykiho")) {
@@ -125,7 +122,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
             }
 
             StringBuilder hiveQueryBuilder = new StringBuilder();
-            final String header = (indicatorHeader == null ? getHeader(dbAndTableName) : indicatorHeader);
+            final String header = (indicatorHeader == null ? getHiveTableHeader(dbAndTableName) : indicatorHeader);
             if (header == null) {
                 logger.error(String.format("%s - header is null at buildExtractionRequest", currentThreadName));
                 return null;
@@ -138,36 +135,39 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
             List<String> columnNameList = new ArrayList<>();
             columnNameList.addAll(conditionMap.keySet());
 
-            Integer joinCondition = 0; /* requestInfo.getJoinCondition(); // Requirement changed: Not Use Join Operation */
-
             if (columnNameList.size() > 0)
                 hiveQueryBuilder.append(buildWhereClause(columnNameList, conditionMap));
 
             try {
-                hiveTaskList.add(buildHiveTask(hiveQueryBuilder.toString(), dbAndTableName, dataSetUID, joinCondition, header));
+                hiveTaskList.add(buildHiveTask(extractionParameter, hiveQueryBuilder.toString(), dbAndTableName, header));
             } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
                 logger.error(String.format("%s - During the building hive task, exception occurs: hiveTask is null.", currentThreadName));
                 return null;
             }
         }
 
-        /* Requirement changed: Not Use Join Operation */
-        if (requestInfo.getJoinCondition() > 0)
-            try {
-                hiveTaskList.addAll(hiveJoinQueryResolver.buildHiveJoinTasks(requestInfo.getJoinCondition(), dataSetUID));
-            } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
-                logger.error(String.format("%s - During the building hive join tasks, exception occurs: hiveJoinTasks are null.", currentThreadName));
-                return null;
-            }
+        try {
+            List<HiveTask> hiveJoinTasks = hiveJoinQueryResolver.buildHiveJoinTasksWithExtractionTasks(extractionParameter);
+            if (hiveJoinTasks != null)
+                hiveTaskList.addAll(hiveJoinTasks);
+        } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
+            logger.error(String.format("%s - During the building hive join tasks, exception occurs: hiveJoinTasks are null.", currentThreadName));
+            return null;
+        }
 
         return new ExtractionRequest(requestInfo, extractionParameter.getIndicator(), hiveTaskList);
     }
 
-    private HiveTask buildHiveTask(String hiveQuery, String dbAndTableName, Integer dataSetUID, Integer joinCondition, String header) {
+    private HiveTask buildHiveTask(ExtractionParameter extractionParameter, String hiveQuery, String dbAndTableName, String header) {
+        final RequestInfo requestInfo = extractionParameter.getRequestInfo();
+        final Integer dataSetUID = requestInfo.getDataSetUID();
+        final Integer joinCondition = requestInfo.getJoinCondition();
+
         HiveTask hiveTask;
         try {
-            final String dbName = dbAndTableName.split("[.]")[0];
-            final String tableName = dbAndTableName.split("[.]")[1];
+            final String splittedDbAndTableName[] = dbAndTableName.split("[.]");
+            final String dbName = splittedDbAndTableName[0];
+            final String tableName = splittedDbAndTableName[1];
 
             final String hashedDbAndTableName = String.format("%s_extracted.%s_%s", dbName, tableName, DataProcessorUtil.getHashedString(hiveQuery)); // hashed value for hiveQuery
             final HiveCreationTask hiveCreationTask = new HiveCreationTask(hashedDbAndTableName, hiveQuery);
@@ -183,7 +183,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                 case 1: // Join Query with KEY_SEQ
                 case 2: // Join Query with PERSON_ID
                     HiveJoinParameter hiveJoinParameter = new HiveJoinParameter(dbName, tableName, hashedDbAndTableName, header);
-                    hiveTask = hiveJoinQueryResolver.buildHiveJoinTask(hiveJoinParameter, hiveCreationTask);
+                    hiveTask = hiveJoinQueryResolver.buildHiveJoinTaskWithOutExtractionTask(hiveJoinParameter, hiveCreationTask);
                     break;
                 default:
                     logger.error(String.format("%s - Invalid join condition: %d", currentThreadName, joinCondition));
@@ -263,12 +263,12 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
         return parameterMap;
     }
 
-    private String getHeader(String dbAndTableName) {
+    private String getHiveTableHeader(String dbAndTableName) {
         StringBuilder headerBuilder = new StringBuilder();
         try {
             String tableName = dbAndTableName.split("[.]")[1];
             if (tableName == null) {
-                logger.error(String.format("%s - tableName is null at getHeader.", currentThreadName));
+                logger.error(String.format("%s - tableName is null at getHiveTableHeader.", currentThreadName));
                 return null;
             }
 
