@@ -2,6 +2,7 @@ package org.bigdatacenter.dataprocessor.common;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Timestamp;
 
 /**
  * Created by Anthony Jinhyuk Kim on 2017-06-21.
@@ -30,5 +31,10 @@ public class DataProcessorUtil {
             return null;
         }
         return hashedStringBuilder.toString();
+    }
+
+    public static String getHdfsLocation(String dbAndTableName, Integer dataSetUID) {
+        return String.format("/tmp/health_care/%s/%d/%s", dbAndTableName,
+                dataSetUID, String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
     }
 }

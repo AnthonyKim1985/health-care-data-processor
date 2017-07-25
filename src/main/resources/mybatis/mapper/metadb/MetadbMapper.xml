@@ -65,10 +65,10 @@
         SELECT * FROM health_care_ui.chu_col_list WHERE ecl_idx = #{ecl_idx};
     </select>
 
-    <!-- List<MetaColumnInfo> readMetaColumns2(@Param("edl_idx") Integer edlIdx, @Param("ecl_eng_name") String eclEngName, @Param("ecl_year") Integer eclYear) -->
+    <!-- List<MetaColumnInfo> readMetaColumns2(@Param("edl_idx") Integer edlIdx, @Param("ecl_ref") String eclRef, @Param("ecl_year") Integer eclYear) -->
     <select id="readMetaColumns2"
             resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaColumnInfo">
-        SELECT * FROM health_care_ui.chu_col_list WHERE edl_idx = #{edl_idx} AND ecl_eng_name = #{ecl_eng_name} AND ecl_year = #{ecl_year};
+        SELECT * FROM health_care_ui.chu_col_list_ref WHERE edl_idx = #{edl_idx} AND ecl_ref = #{ecl_ref} AND ecl_year = #{ecl_year};
     </select>
 
     <!-- List<MetaRelationIndicatorWithColumn> readMetaRelationIndicatorWithColumn(@Param("eil_idx") Integer eilIdx) -->

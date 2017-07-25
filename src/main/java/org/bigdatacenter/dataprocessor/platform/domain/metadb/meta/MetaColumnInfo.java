@@ -21,4 +21,5 @@ public class MetaColumnInfo implements Serializable {
     private Integer ecl_search_type;
     private Boolean is_usable;
     private Integer ecl_year;
+    private String ecl_ref;
 }

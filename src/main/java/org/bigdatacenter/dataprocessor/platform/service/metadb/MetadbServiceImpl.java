@@ -79,8 +79,8 @@ public class MetadbServiceImpl implements MetadbService {
     }
 
     @Override
-    public List<MetaColumnInfo> findMetaColumns(Integer edlIdx, String eclEngName, Integer eclYear) {
-        return metadbMapper.readMetaColumns2(edlIdx, eclEngName, eclYear);
+    public List<MetaColumnInfo> findMetaColumns(Integer edlIdx, String eclRef, Integer eclYear) {
+        return metadbMapper.readMetaColumns2(edlIdx, eclRef, eclYear);
     }
 
     @Override

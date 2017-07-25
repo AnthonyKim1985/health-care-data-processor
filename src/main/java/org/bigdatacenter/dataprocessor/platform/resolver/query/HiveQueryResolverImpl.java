@@ -5,6 +5,7 @@ import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.Extractio
 import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.parameter.HiveJoinParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.HiveTask;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.task.HiveTaskAndExtractionTaskPair;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.creation.HiveCreationTask;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.extraction.HiveExtractionTask;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.TaskInfo;
@@ -21,9 +22,10 @@ import org.bigdatacenter.dataprocessor.platform.service.metadb.MetadbService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -112,6 +114,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
         final RequestInfo requestInfo = extractionParameter.getRequestInfo();
         final Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = extractionParameter.getParameterMap();
         final List<HiveTask> hiveTaskList = new ArrayList<>();
+        final Map<String/*dbAndTableName*/, HiveExtractionTask> hiveExtractionTaskMap = new HashMap<>();
 
         final String indicatorHeader = extractionParameter.getIndicator();
 
@@ -139,26 +142,30 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                 hiveQueryBuilder.append(buildWhereClause(columnNameList, conditionMap));
 
             try {
-                hiveTaskList.add(buildHiveTask(extractionParameter, hiveQueryBuilder.toString(), dbAndTableName, header));
+                HiveTaskAndExtractionTaskPair hiveTaskAndExtractionTaskPair = buildHiveTask(extractionParameter, hiveQueryBuilder.toString(), dbAndTableName, header);
+                hiveTaskList.add(hiveTaskAndExtractionTaskPair.getHiveTask());
+
+                hiveExtractionTaskMap.put(hiveTaskAndExtractionTaskPair.getDbAndTableName(), hiveTaskAndExtractionTaskPair.getHiveExtractionTask());
             } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
                 logger.error(String.format("%s - During the building hive task, exception occurs: hiveTask is null.", currentThreadName));
+                e.printStackTrace();
                 return null;
             }
         }
 
-        try {
-            List<HiveTask> hiveJoinTasks = hiveJoinQueryResolver.buildHiveJoinTasksWithExtractionTasks(extractionParameter);
-            if (hiveJoinTasks != null)
-                hiveTaskList.addAll(hiveJoinTasks);
-        } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
-            logger.error(String.format("%s - During the building hive join tasks, exception occurs: hiveJoinTasks are null.", currentThreadName));
-            return null;
-        }
+        if (requestInfo.getJoinCondition() > 0)
+            try {
+                hiveTaskList.addAll(hiveJoinQueryResolver.buildHiveJoinTasksWithExtractionTasks(extractionParameter, hiveExtractionTaskMap));
+            } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
+                logger.error(String.format("%s - During the building hive join tasks, exception occurs: hiveJoinTasks are null.", currentThreadName));
+                e.printStackTrace();
+                return null;
+            }
 
         return new ExtractionRequest(requestInfo, extractionParameter.getIndicator(), hiveTaskList);
     }
 
-    private HiveTask buildHiveTask(ExtractionParameter extractionParameter, String hiveQuery, String dbAndTableName, String header) {
+    private HiveTaskAndExtractionTaskPair buildHiveTask(ExtractionParameter extractionParameter, String hiveQuery, String dbAndTableName, String header) {
         final RequestInfo requestInfo = extractionParameter.getRequestInfo();
         final Integer dataSetUID = requestInfo.getDataSetUID();
         final Integer joinCondition = requestInfo.getJoinCondition();
@@ -169,32 +176,30 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
             final String dbName = splittedDbAndTableName[0];
             final String tableName = splittedDbAndTableName[1];
 
-            final String hashedDbAndTableName = String.format("%s_extracted.%s_%s", dbName, tableName, DataProcessorUtil.getHashedString(hiveQuery)); // hashed value for hiveQuery
-            final HiveCreationTask hiveCreationTask = new HiveCreationTask(hashedDbAndTableName, hiveQuery);
+            final String dbAndHashedTableName = String.format("%s_extracted.%s_%s", dbName, tableName, DataProcessorUtil.getHashedString(hiveQuery)); // hashed value for hiveQuery
+            final HiveCreationTask hiveCreationTask = new HiveCreationTask(dbAndHashedTableName, hiveQuery);
+
+            final String hdfsLocation = DataProcessorUtil.getHdfsLocation(dbAndTableName, dataSetUID);
+            final HiveExtractionTask hiveExtractionTask = new HiveExtractionTask(hdfsLocation, String.format("SELECT * FROM %s", dbAndHashedTableName), header);
 
             switch (joinCondition) {
                 case 0: // No Join Query
-                    // /tmp/health_care/{dbAndTableName}/{dataSetUID}/{timeStamp}
-                    final String hdfsLocation = String.format("/tmp/health_care/%s/%d/%s", dbAndTableName,
-                            dataSetUID, String.valueOf(new Timestamp(System.currentTimeMillis()).getTime()));
-                    HiveExtractionTask hiveExtractionTask = new HiveExtractionTask(hdfsLocation, String.format("SELECT * FROM %s", hashedDbAndTableName), header);
                     hiveTask = new HiveTask(hiveCreationTask, hiveExtractionTask);
                     break;
                 case 1: // Join Query with KEY_SEQ
                 case 2: // Join Query with PERSON_ID
-                    HiveJoinParameter hiveJoinParameter = new HiveJoinParameter(dbName, tableName, hashedDbAndTableName, header);
+                    HiveJoinParameter hiveJoinParameter = new HiveJoinParameter(dbName, tableName, dbAndHashedTableName, header);
                     hiveTask = hiveJoinQueryResolver.buildHiveJoinTaskWithOutExtractionTask(hiveJoinParameter, hiveCreationTask);
                     break;
                 default:
                     logger.error(String.format("%s - Invalid join condition: %d", currentThreadName, joinCondition));
                     throw new NullPointerException();
             }
+            return new HiveTaskAndExtractionTaskPair(hiveTask, dbAndTableName, hiveExtractionTask);
         } catch (ArrayIndexOutOfBoundsException e) {
             logger.error(String.format("%s - split exception occurs at dbAndTableName", currentThreadName));
             throw new ArrayIndexOutOfBoundsException();
         }
-
-        return hiveTask;
     }
 
     private String takeIndicatorTask(Integer dataSetUID) {
@@ -223,7 +228,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
         }
 
         if (indicatorBuilder.toString().length() == 0) {
-            logger.error(String.format("%s - The length of indicatorBuilder is 0 at takeIndicatorTask.", currentThreadName));
+            logger.info(String.format("%s - The length of indicatorBuilder is 0 at takeIndicatorTask.", currentThreadName));
             return null;
         }
 
@@ -235,6 +240,12 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
 
         for (TaskInfo taskInfo : taskInfoList) {
             String parameterKey = String.format("%s.%s", taskInfo.getDatabaseName(), taskInfo.getTableName());
+
+            if (parameterKey.contains("ykiho")) {
+                logger.warn(String.format("%s - ykiho has been skipped", currentThreadName));
+                continue;
+            }
+
             Map<String/*column*/, List<String>/*values*/> parameterValue = parameterMap.get(parameterKey);
 
             List<String> values;

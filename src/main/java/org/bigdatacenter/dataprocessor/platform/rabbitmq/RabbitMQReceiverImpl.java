@@ -110,8 +110,10 @@ public class RabbitMQReceiverImpl implements RabbitMQReceiver {
             final long queryBeginTime = System.currentTimeMillis();
             logger.info(String.format("%s - Remaining %d query processing", currentThreadName, (MAX_TASKS - i)));
 
-            logger.info(String.format("%s - Start table creation at Hive Query: %s", currentThreadName, hiveCreationTask.getHiveQuery()));
-            hiveService.createTableByHiveQL(hiveCreationTask);
+            if (hiveCreationTask != null) {
+                logger.info(String.format("%s - Start table creation at Hive Query: %s", currentThreadName, hiveCreationTask.getHiveQuery()));
+                hiveService.createTableByHiveQL(hiveCreationTask);
+            }
 
             if (hiveExtractionTask != null) {
                 logger.info(String.format("%s - Start data extraction at Hive Query: %s", currentThreadName, hiveExtractionTask.getHiveQuery()));

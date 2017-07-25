@@ -11,6 +11,6 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 public class HiveCreationTask implements Serializable {
-    private String hashedDbAndTableName;
+    private String dbAndHashedTableName;
     private String hiveQuery;
 }

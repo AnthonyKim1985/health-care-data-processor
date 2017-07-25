@@ -8,6 +8,6 @@
 
     <!-- void createTableByHiveQL(@Param("hiveCreationTask") HiveCreationTask hiveCreationTask) -->
     <select id="createTableByHiveQL">
-        CREATE TABLE IF NOT EXISTS ${hiveCreationTask.hashedDbAndTableName} AS ${hiveCreationTask.hiveQuery}
+        CREATE TABLE IF NOT EXISTS ${hiveCreationTask.dbAndHashedTableName} AS ${hiveCreationTask.hiveQuery}
     </select>
 </mapper>
