@@ -35,21 +35,26 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
         // TODO: 다음 3개의 CASE 중 수행할 작업을 판별한다.
         //
         Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMap = getColumnKeyMap(extractionParameter.getParameterMap());
-        switch (getJoinTaskType(columnKeyMap)) {
-            case EXCLUSIVE_COLUMN_ZERO: // case 1: 모든 테이블에 있는 컬럼만 필터링 (No Join)
-                logger.info(String.format("%s - Join Task is EXCLUSIVE_COLUMN_ZERO", currentThreadName));
-                break;
-            case EXCLUSIVE_COLUMN_ONE: // case 2: 모든 테이블에 있는 컬럼 + 특정 테이블에 있는 컬럼 (1개) 필터링
-                logger.info(String.format("%s - Join Task is EXCLUSIVE_COLUMN_ONE", currentThreadName));
-                hiveTaskList = new ArrayList<>(hiveJoinQueryBuilder.buildHiveJoinQueryTasks(extractionParameter, columnKeyMap, hiveJoinParameterListMap));
-                break;
-            case EXCLUSIVE_COLUMN_TWO_OR_MORE: // case 3: 모든 테이블에 있는 컬럼 + 특정 테이블에 있는 컬럼 (2개 이상) 필터링
-                logger.info(String.format("%s - Join Task is EXCLUSIVE_COLUMN_TWO_OR_MORE", currentThreadName));
-                hiveTaskList = new ArrayList<>(hiveJoinQueryBuilder.buildHiveJoinQueryTasks(extractionParameter, columnKeyMap, hiveJoinParameterListMap));
-                break;
-            default:
-                logger.error(String.format("%s - Invalid join operation option", currentThreadName));
-                throw new NullPointerException();
+        try {
+            switch (getJoinTaskType(columnKeyMap)) {
+                case EXCLUSIVE_COLUMN_ZERO: // case 1: 모든 테이블에 있는 컬럼만 필터링 (No Join)
+                    logger.info(String.format("%s - Join Task is EXCLUSIVE_COLUMN_ZERO", currentThreadName));
+                    break;
+                case EXCLUSIVE_COLUMN_ONE: // case 2: 모든 테이블에 있는 컬럼 + 특정 테이블에 있는 컬럼 (1개) 필터링
+                    logger.info(String.format("%s - Join Task is EXCLUSIVE_COLUMN_ONE", currentThreadName));
+                    hiveTaskList = new ArrayList<>(hiveJoinQueryBuilder.buildHiveJoinQueryTasks(extractionParameter, columnKeyMap, hiveJoinParameterListMap));
+                    break;
+                case EXCLUSIVE_COLUMN_TWO_OR_MORE: // case 3: 모든 테이블에 있는 컬럼 + 특정 테이블에 있는 컬럼 (2개 이상) 필터링
+                    logger.info(String.format("%s - Join Task is EXCLUSIVE_COLUMN_TWO_OR_MORE", currentThreadName));
+                    hiveTaskList = new ArrayList<>(hiveJoinQueryBuilder.buildHiveJoinQueryTasks(extractionParameter, columnKeyMap, hiveJoinParameterListMap));
+                    break;
+                default:
+                    logger.error(String.format("%s - Invalid join operation option", currentThreadName));
+                    throw new NullPointerException();
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            logger.error(String.format("%s - Exception occurs at buildHiveJoinTasksWithExtractionTasks: %s", currentThreadName, e.getMessage()));
+            throw new ArrayIndexOutOfBoundsException(e.getMessage());
         }
 
         return hiveTaskList;
