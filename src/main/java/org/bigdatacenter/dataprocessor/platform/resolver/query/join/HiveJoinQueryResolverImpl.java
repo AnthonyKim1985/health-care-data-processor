@@ -42,8 +42,7 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
         switch (getJoinTaskType(columnKeyMap)) {
             case EXCLUSIVE_COLUMN_ZERO: // case 1: 모든 테이블에 있는 컬럼만 필터링 (No Join)
                 logger.info(String.format("%s - Join Task is EXCLUSIVE_COLUMN_ZERO", currentThreadName));
-                for (String dbAndTableName : hiveExtractionTaskMap.keySet())
-                    hiveTaskList.add(new HiveTask(null, hiveExtractionTaskMap.get(dbAndTableName)));
+                hiveTaskList.addAll(buildHiveJoinTasksForNonExclusiveColumn(hiveExtractionTaskMap));
                 break;
             case EXCLUSIVE_COLUMN_ONE: // case 2: 모든 테이블에 있는 컬럼 + 특정 테이블에 있는 컬럼 (1개) 필터링
                 logger.info(String.format("%s - Join Task is EXCLUSIVE_COLUMN_ONE", currentThreadName));
@@ -55,10 +54,9 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
                 break;
             default:
                 logger.error(String.format("%s - Invalid join operation option", currentThreadName));
+                hiveJoinParameterListMap.clear();
                 throw new NullPointerException();
         }
-
-        hiveJoinParameterListMap.clear();
 
         return hiveTaskList;
     }
@@ -98,6 +96,15 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
         return EXCLUSIVE_COLUMN_TWO_OR_MORE;
     }
 
+    private List<HiveTask> buildHiveJoinTasksForNonExclusiveColumn(Map<String/*dbAndTableName*/, HiveExtractionTask> hiveExtractionTaskMap) {
+        final List<HiveTask> hiveTaskList = new ArrayList<>();
+        for (String dbAndTableName : hiveExtractionTaskMap.keySet())
+            hiveTaskList.add(new HiveTask(null, hiveExtractionTaskMap.get(dbAndTableName)));
+        hiveJoinParameterListMap.clear();
+
+        return hiveTaskList;
+    }
+
     private List<HiveTask> buildHiveJoinTasksForExclusiveColumn(ExtractionParameter extractionParameter,
                                                                 Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMap,
                                                                 Map<String/*dbAndTableName*/, HiveExtractionTask> hiveExtractionTaskMap) {
@@ -135,6 +142,7 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
                     throw new NullPointerException();
             }
         }
+        hiveJoinParameterListMap.clear();
 
         return hiveTaskList;
     }
@@ -155,34 +163,37 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
         for (String dbAndTableName : exclusiveDbAndTableNameList) {
             logger.debug(String.format("%s - dbAndTableName at getHiveJoinTasks: %s", currentThreadName, dbAndTableName));
             exclusiveTableJoinParameterList.add(getHiveJoinParameterByDbAndTableName(hiveJoinParameterList, dbAndTableName));
-            hiveTaskList.add(new HiveTask(null, hiveExtractionTaskMap.get(dbAndTableName)));
+            //hiveTaskList.add(new HiveTask(null, hiveExtractionTaskMap.get(dbAndTableName)));
         }
 
         logger.debug(String.format("%s - exclusiveTableJoinParameterList at getHiveJoinTasks: %s", currentThreadName, exclusiveTableJoinParameterList));
 
-        HiveTaskAndJoinPair hiveTaskAndJoinPair = getExclusiveTableJoinTask(exclusiveTableJoinParameterList, joinKey);
+        final String dbName = exclusiveTableJoinParameterList.get(0).getDbName();
+        HiveTaskAndJoinPair hiveTaskAndJoinPair = getExclusiveTableJoinTask(exclusiveTableJoinParameterList, dbName, joinKey, dataSetUID);
         hiveTaskList.add(hiveTaskAndJoinPair.getHiveTask());
 
         //
         // TODO: Target Table Join
         //
-        List<HiveJoinParameter> targetTableJoinParameterList = new ArrayList<>();
-        for (String dbAndTableName : joinTargetDbAndTableList)
-            targetTableJoinParameterList.add(getHiveJoinParameterByDbAndTableName(hiveJoinParameterList, dbAndTableName));
+//        List<HiveJoinParameter> targetTableJoinParameterList = new ArrayList<>();
+//        targetTableJoinParameterList.addAll(exclusiveTableJoinParameterList);
+//
+//        for (String dbAndTableName : joinTargetDbAndTableList)
+//            targetTableJoinParameterList.add(getHiveJoinParameterByDbAndTableName(hiveJoinParameterList, dbAndTableName));
 
-        logger.debug(String.format("%s - targetTableJoinParameterList at getHiveJoinTasks: %s", currentThreadName, targetTableJoinParameterList));
+        logger.debug(String.format("%s - hiveJoinParameterList at getHiveJoinTasks: %s", currentThreadName, hiveJoinParameterList));
 
-        hiveTaskList.addAll(getTargetTableJoinTasks(hiveTaskAndJoinPair.getHiveJoinParameter(), targetTableJoinParameterList, joinKey, dataSetUID));
+        hiveTaskList.addAll(getTargetTableJoinTasks(hiveTaskAndJoinPair.getHiveJoinParameter(), hiveJoinParameterList, joinKey, dataSetUID));
 
         return hiveTaskList;
     }
 
     private String getExclusiveTableJoinQuery(List<HiveJoinParameter> exclusiveTableJoinParameterList, String joinKey) {
         if (exclusiveTableJoinParameterList == null) {
-            logger.error(String.format("%s - exclusiveTableJoinParameterList is null.", currentThreadName));
+            logger.error(String.format("%s - exclusiveTableJoinParameterList at getExclusiveTableJoinQuery is null.", currentThreadName));
             throw new NullPointerException();
         } else if (exclusiveTableJoinParameterList.isEmpty()) {
-            logger.error(String.format("%s - exclusiveTableJoinParameterList is empty.", currentThreadName));
+            logger.error(String.format("%s - exclusiveTableJoinParameterList at getExclusiveTableJoinQuery is empty.", currentThreadName));
             throw new NullPointerException();
         }
 
@@ -219,18 +230,40 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
         return joinQueryBuilder.toString();
     }
 
-    private HiveTaskAndJoinPair getExclusiveTableJoinTask(List<HiveJoinParameter> exclusiveTableJoinParameterList, String joinKey) {
+    private HiveTaskAndJoinPair getExclusiveTableJoinTask(List<HiveJoinParameter> exclusiveTableJoinParameterList, String dbName, String joinKey, Integer dataSetUID) {
+        if (exclusiveTableJoinParameterList == null) {
+            logger.error(String.format("%s - exclusiveTableJoinParameterList at getExclusiveTableJoinTask is null.", currentThreadName));
+            throw new NullPointerException();
+        } else if (exclusiveTableJoinParameterList.isEmpty()) {
+            logger.error(String.format("%s - exclusiveTableJoinParameterList at getExclusiveTableJoinTask is empty.", currentThreadName));
+            throw new NullPointerException();
+        }
+
         logger.debug(String.format("%s - exclusiveTableJoinParameterList at getExclusiveTableJoinTask: %s", currentThreadName, exclusiveTableJoinParameterList));
 
-        final String dbName = exclusiveTableJoinParameterList.get(0).getDbName();
-        final String tableName = getExclusiveJoinedTableName(exclusiveTableJoinParameterList, joinKey);
-
+        final String exclusiveJoinedTableName = getExclusiveJoinedTableName(exclusiveTableJoinParameterList, joinKey);
         final String hiveQuery = getExclusiveTableJoinQuery(exclusiveTableJoinParameterList, joinKey);
         final String integratedDbName = String.format("%s_join_%s_integrated", dbName, joinKey);
-        final String integratedTableName = String.format("%s_%s", tableName, DataProcessorUtil.getHashedString(hiveQuery));
+        final String integratedTableName = String.format("%s_%s", exclusiveJoinedTableName, DataProcessorUtil.getHashedString(hiveQuery));
         final String integratedDbAndHashedTableName = String.format("%s.%s", integratedDbName, integratedTableName);
 
-        HiveTask hiveTask = new HiveTask(new HiveCreationTask(integratedDbAndHashedTableName, hiveQuery), null);
+        HiveTask hiveTask;
+        if (exclusiveTableJoinParameterList.size() == 1) {
+            final HiveJoinParameter exclusiveTableJoinFirstParameter = exclusiveTableJoinParameterList.get(0);
+
+            final String tableName = exclusiveTableJoinFirstParameter.getTableName();
+            final String dbAndTableName = String.format("%s.%s", dbName, tableName);
+            final String dbAndHashedTableName = exclusiveTableJoinFirstParameter.getDbAndHashedTableName();
+            final String header = exclusiveTableJoinFirstParameter.getHeader();
+            final String hdfsLocation = DataProcessorUtil.getHdfsLocation(dbAndTableName, dataSetUID);
+
+            hiveTask = new HiveTask(
+                    new HiveCreationTask(integratedDbAndHashedTableName, hiveQuery),
+                    new HiveExtractionTask(hdfsLocation, String.format("SELECT * FROM %s", dbAndHashedTableName), header));
+        } else {
+            hiveTask = new HiveTask(new HiveCreationTask(integratedDbAndHashedTableName, hiveQuery), null);
+        }
+
         HiveJoinParameter hiveJoinParameter = new HiveJoinParameter(integratedDbName, integratedTableName, integratedDbAndHashedTableName, joinKey);
 
         logger.debug(String.format("%s - hiveTask at getExclusiveTableJoinTask: %s", currentThreadName, hiveTask));
