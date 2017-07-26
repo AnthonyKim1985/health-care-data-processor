@@ -5,7 +5,6 @@ import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.Extractio
 import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.parameter.HiveJoinParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.HiveTask;
-import org.bigdatacenter.dataprocessor.platform.domain.hive.task.HiveTaskAndExtractionTaskPair;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.creation.HiveCreationTask;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.extraction.HiveExtractionTask;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.TaskInfo;
@@ -22,8 +21,6 @@ import org.bigdatacenter.dataprocessor.platform.service.metadb.MetadbService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -113,8 +110,11 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
     public ExtractionRequest buildExtractionRequest(ExtractionParameter extractionParameter) {
         final RequestInfo requestInfo = extractionParameter.getRequestInfo();
         final Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = extractionParameter.getParameterMap();
+
         final List<HiveTask> hiveTaskList = new ArrayList<>();
-        final Map<String/*dbAndTableName*/, HiveExtractionTask> hiveExtractionTaskMap = new HashMap<>();
+        final List<HiveTask> hiveTaskListForExtractionTask = new ArrayList<>();
+
+        final Map<String/*MapKey: Year*/, List<HiveJoinParameter>> hiveJoinParameterListMap = new HashMap<>();
 
         final String indicatorHeader = extractionParameter.getIndicator();
 
@@ -142,10 +142,8 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                 hiveQueryBuilder.append(buildWhereClause(columnNameList, conditionMap));
 
             try {
-                HiveTaskAndExtractionTaskPair hiveTaskAndExtractionTaskPair = buildHiveTask(extractionParameter, hiveQueryBuilder.toString(), dbAndTableName, header);
-                hiveTaskList.add(hiveTaskAndExtractionTaskPair.getHiveTask());
-
-                hiveExtractionTaskMap.put(hiveTaskAndExtractionTaskPair.getDbAndTableName(), hiveTaskAndExtractionTaskPair.getHiveExtractionTask());
+                hiveTaskList.add(buildHiveTask(extractionParameter, hiveTaskListForExtractionTask,
+                        hiveJoinParameterListMap, hiveQueryBuilder.toString(), dbAndTableName, header));
             } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
                 logger.error(String.format("%s - During the building hive task, exception occurs: hiveTask is null.", currentThreadName));
                 e.printStackTrace();
@@ -155,7 +153,11 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
 
         if (requestInfo.getJoinCondition() > 0)
             try {
-                hiveTaskList.addAll(hiveJoinQueryResolver.buildHiveJoinTasksWithExtractionTasks(extractionParameter, hiveExtractionTaskMap));
+                List<HiveTask> hiveJoinTaskList = hiveJoinQueryResolver.buildHiveJoinTasksWithExtractionTasks(extractionParameter, hiveJoinParameterListMap);
+                if (hiveJoinTaskList != null)
+                    hiveTaskList.addAll(hiveJoinTaskList);
+                else
+                    hiveTaskList.addAll(hiveTaskListForExtractionTask);
             } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
                 logger.error(String.format("%s - During the building hive join tasks, exception occurs: hiveJoinTasks are null.", currentThreadName));
                 e.printStackTrace();
@@ -165,7 +167,10 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
         return new ExtractionRequest(requestInfo, extractionParameter.getIndicator(), hiveTaskList);
     }
 
-    private HiveTaskAndExtractionTaskPair buildHiveTask(ExtractionParameter extractionParameter, String hiveQuery, String dbAndTableName, String header) {
+    private HiveTask buildHiveTask(ExtractionParameter extractionParameter,
+                                   List<HiveTask> hiveTaskListForExtractionTask,
+                                   Map<String/*MapKey: Year*/, List<HiveJoinParameter>> hiveJoinParameterListMap,
+                                   String hiveQuery, String dbAndTableName, String header) {
         final RequestInfo requestInfo = extractionParameter.getRequestInfo();
         final Integer dataSetUID = requestInfo.getDataSetUID();
         final Integer joinCondition = requestInfo.getJoinCondition();
@@ -181,6 +186,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
 
             final String hdfsLocation = DataProcessorUtil.getHdfsLocation(dbAndTableName, dataSetUID);
             final HiveExtractionTask hiveExtractionTask = new HiveExtractionTask(hdfsLocation, String.format("SELECT * FROM %s", dbAndHashedTableName), header);
+            hiveTaskListForExtractionTask.add(new HiveTask(null, hiveExtractionTask));
 
             switch (joinCondition) {
                 case 0: // No Join Query
@@ -189,17 +195,17 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                 case 1: // Join Query with KEY_SEQ
                 case 2: // Join Query with PERSON_ID
                     HiveJoinParameter hiveJoinParameter = new HiveJoinParameter(dbName, tableName, dbAndHashedTableName, header);
-                    hiveTask = hiveJoinQueryResolver.buildHiveJoinTaskWithOutExtractionTask(hiveJoinParameter, hiveCreationTask);
+                    hiveTask = hiveJoinQueryResolver.buildHiveJoinTaskWithOutExtractionTask(hiveJoinParameter, hiveCreationTask, hiveJoinParameterListMap);
                     break;
                 default:
                     logger.error(String.format("%s - Invalid join condition: %d", currentThreadName, joinCondition));
                     throw new NullPointerException();
             }
-            return new HiveTaskAndExtractionTaskPair(hiveTask, dbAndTableName, hiveExtractionTask);
         } catch (ArrayIndexOutOfBoundsException e) {
             logger.error(String.format("%s - split exception occurs at dbAndTableName", currentThreadName));
             throw new ArrayIndexOutOfBoundsException();
         }
+        return hiveTask;
     }
 
     private String takeIndicatorTask(Integer dataSetUID) {

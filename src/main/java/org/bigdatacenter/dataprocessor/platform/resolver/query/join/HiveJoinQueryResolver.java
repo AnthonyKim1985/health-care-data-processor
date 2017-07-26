@@ -17,7 +17,10 @@ public interface HiveJoinQueryResolver {
     int EXCLUSIVE_COLUMN_ONE = 1;
     int EXCLUSIVE_COLUMN_TWO_OR_MORE = 2;
 
-    List<HiveTask> buildHiveJoinTasksWithExtractionTasks(ExtractionParameter extractionParameter, Map<String/*dbAndTableName*/, HiveExtractionTask> hiveExtractionTaskMap);
+    List<HiveTask> buildHiveJoinTasksWithExtractionTasks(ExtractionParameter extractionParameter,
+                                                         Map<String/*MapKey: Year*/, List<HiveJoinParameter>> hiveJoinParameterListMap);
 
-    HiveTask buildHiveJoinTaskWithOutExtractionTask(HiveJoinParameter hiveJoinParameter, HiveCreationTask hiveCreationTask);
+    HiveTask buildHiveJoinTaskWithOutExtractionTask(HiveJoinParameter hiveJoinParameter,
+                                                    HiveCreationTask hiveCreationTask,
+                                                    Map<String/*MapKey: Year*/, List<HiveJoinParameter>> hiveJoinParameterListMap);
 }
