@@ -34,7 +34,7 @@ import java.util.Map;
 @Component
 public class HiveQueryResolverImpl implements HiveQueryResolver {
     private static final Logger logger = LoggerFactory.getLogger(HiveQueryResolverImpl.class);
-    private final String currentThreadName = Thread.currentThread().getName();
+    private static final String currentThreadName = Thread.currentThread().getName();
 
     @Autowired
     private MetadbService metadbService;

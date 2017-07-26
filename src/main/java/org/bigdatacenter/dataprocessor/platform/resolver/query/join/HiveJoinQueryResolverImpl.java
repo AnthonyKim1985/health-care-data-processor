@@ -21,7 +21,7 @@ import java.util.Map;
 @Component
 public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
     private static final Logger logger = LoggerFactory.getLogger(HiveJoinQueryResolverImpl.class);
-    private final String currentThreadName = Thread.currentThread().getName();
+    private static final String currentThreadName = Thread.currentThread().getName();
 
     @Autowired
     private HiveJoinQueryBuilder hiveJoinQueryBuilder;
@@ -60,7 +60,8 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
         return hiveTaskList;
     }
 
-    private Map<String/*Column Name*/, List<String/*Table Name*/>> getColumnKeyMap(Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap) {
+    @Override
+    public Map<String/*Column Name*/, List<String/*Table Name*/>> getColumnKeyMap(Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap) {
         Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMap = new HashMap<>();
 
         for (String dbAndTableName : parameterMap.keySet()) {
@@ -79,7 +80,8 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
         return columnKeyMap;
     }
 
-    private Integer getJoinTaskType(Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMap) {
+    @Override
+    public Integer getJoinTaskType(Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMap) {
         int numberOfExclusiveColumnNames = 0;
         for (String columnName : columnKeyMap.keySet())
             if (columnKeyMap.get(columnName).size() == 1)
@@ -87,12 +89,12 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
 
         switch (numberOfExclusiveColumnNames) {
             case 0:
-                return EXCLUSIVE_COLUMN_ZERO;
+                return HiveJoinQueryResolver.EXCLUSIVE_COLUMN_ZERO;
             case 1:
-                return EXCLUSIVE_COLUMN_ONE;
+                return HiveJoinQueryResolver.EXCLUSIVE_COLUMN_ONE;
         }
 
-        return EXCLUSIVE_COLUMN_TWO_OR_MORE;
+        return HiveJoinQueryResolver.EXCLUSIVE_COLUMN_TWO_OR_MORE;
     }
 
     @Override

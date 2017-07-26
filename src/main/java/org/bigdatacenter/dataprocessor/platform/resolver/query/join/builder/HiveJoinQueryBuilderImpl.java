@@ -22,7 +22,7 @@ import java.util.Map;
 @Component
 public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
     private static final Logger logger = LoggerFactory.getLogger(HiveJoinQueryBuilderImpl.class);
-    private final String currentThreadName = Thread.currentThread().getName();
+    private static final String currentThreadName = Thread.currentThread().getName();
 
     @Override
     public List<HiveTask> buildHiveJoinQueryTasks(ExtractionParameter extractionParameter,
@@ -103,7 +103,6 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
             //
             // TODO: Target Table Join
             //
-
             final String dbName = exclusiveTableJoinParameterList.get(0).getDbName();
             HiveJoinParameter sourceJoinParameter = getSourceJoinParameter(hiveTaskList, exclusiveTableJoinParameterList, dbName, joinKey, dataSetUID);
             hiveTaskList.addAll(getTargetTableJoinTasks(sourceJoinParameter, hiveJoinParameterList, joinKey, dataSetUID));

@@ -23,4 +23,8 @@ public interface HiveJoinQueryResolver {
     HiveTask buildHiveJoinTaskWithOutExtractionTask(HiveJoinParameter hiveJoinParameter,
                                                     HiveCreationTask hiveCreationTask,
                                                     Map<String/*MapKey: Year*/, List<HiveJoinParameter>> hiveJoinParameterListMap);
+
+    Map<String/*Column Name*/, List<String/*Table Name*/>> getColumnKeyMap(Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap);
+
+    Integer getJoinTaskType(Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMap);
 }

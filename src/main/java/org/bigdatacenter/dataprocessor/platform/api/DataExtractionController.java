@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 public class DataExtractionController {
     private static final String BAD_REQUEST_MESSAGE = "invalid request (%s)";
     private static final Logger logger = LoggerFactory.getLogger(DataExtractionController.class);
-    private final String currentThreadName = Thread.currentThread().getName();
+    private static final String currentThreadName = Thread.currentThread().getName();
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
