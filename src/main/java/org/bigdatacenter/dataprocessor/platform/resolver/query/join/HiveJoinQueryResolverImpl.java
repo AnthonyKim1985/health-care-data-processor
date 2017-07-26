@@ -249,7 +249,7 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
 
         HiveTask hiveTask;
         if (exclusiveTableJoinParameterList.size() == 1) {
-            final HiveJoinParameter exclusiveTableJoinFirstParameter = exclusiveTableJoinParameterList.get(0);
+            HiveJoinParameter exclusiveTableJoinFirstParameter = exclusiveTableJoinParameterList.get(0);
 
             final String tableName = exclusiveTableJoinFirstParameter.getTableName();
             final String dbAndTableName = String.format("%s.%s", dbName, tableName);
@@ -327,10 +327,10 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
 
         joinQueryBuilder.append(String.format("SELECT DISTINCT %s.* FROM %s %s INNER JOIN %s %s ON (%s.%s = %s.%s)",
                 targetAlias,
-                sourceJoinParameter.getDbAndHashedTableName(), sourceAlias,
                 targetJoinParameter.getDbAndHashedTableName(), targetAlias,
-                sourceAlias, joinKey,
-                targetAlias, joinKey));
+                sourceJoinParameter.getDbAndHashedTableName(), sourceAlias,
+                targetAlias, joinKey,
+                sourceAlias, joinKey));
 
         logger.debug(String.format("%s - joinQueryBuilder at getTargetTableJoinQuery: %s", currentThreadName, joinQueryBuilder.toString()));
 
