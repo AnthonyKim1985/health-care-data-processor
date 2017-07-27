@@ -272,12 +272,10 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
     }
 
     private Boolean modifyDbAndHashedTableNameInTargetTableJoinParameter(HiveJoinParameter targetTableJoinParameter, List<String> exclusiveDbAndTableNameList) {
-        final String targetDbAndTableName = String.format("%s.%s", targetTableJoinParameter.getDbName(), targetTableJoinParameter.getTableName());
+        if (targetTableJoinParameter.getIsCreatable())
+            return Boolean.FALSE;
 
-        if (!targetTableJoinParameter.getIsCreatable()) {
-            targetTableJoinParameter.setDbAndHashedTableName(targetDbAndTableName);
-            return Boolean.TRUE;
-        }
+        final String targetDbAndTableName = String.format("%s.%s", targetTableJoinParameter.getDbName(), targetTableJoinParameter.getTableName());
 
         for (String exclusiveDbAndTableName : exclusiveDbAndTableNameList)
             if (targetDbAndTableName.equals(exclusiveDbAndTableName)) {
