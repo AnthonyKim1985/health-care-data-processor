@@ -6,9 +6,13 @@ import org.bigdatacenter.dataprocessor.platform.domain.hive.parameter.HiveJoinPa
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.HiveTask;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.creation.HiveCreationTask;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.extraction.HiveExtractionTask;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaDatabaseInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestInfo;
+import org.bigdatacenter.dataprocessor.platform.resolver.query.common.HiveQueryUtil;
+import org.bigdatacenter.dataprocessor.platform.service.metadb.MetadbService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -24,6 +28,9 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
     private static final Logger logger = LoggerFactory.getLogger(HiveJoinQueryBuilderImpl.class);
     private static final String currentThreadName = Thread.currentThread().getName();
 
+    @Autowired
+    private MetadbService metadbService;
+
     @Override
     public List<HiveTask> buildHiveJoinQueryTasks(ExtractionParameter extractionParameter,
                                                   Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMap,
@@ -31,6 +38,9 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
         final RequestInfo requestInfo = extractionParameter.getRequestInfo();
         final Integer joinCondition = requestInfo.getJoinCondition();
         final Integer dataSetUID = requestInfo.getDataSetUID();
+
+        final MetaDatabaseInfo metaDatabaseInfo = metadbService.findMetaDatabase(requestInfo.getDatasetID());
+        final String dbName = metaDatabaseInfo.getEdl_eng_name();
 
         List<HiveTask> hiveTaskList = null;
 
@@ -48,10 +58,10 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
                         logger.info(String.format("%s - No Join Operation", currentThreadName));
                         break;
                     case 1: // Take join operation by KEY_SEQ
-                        hiveTaskList = new ArrayList<>(getHiveJoinTasks(hiveJoinParameterList, exclusiveDbAndTableNameList, "key_seq", dataSetUID));
+                        hiveTaskList = new ArrayList<>(getHiveJoinTasks(hiveJoinParameterList, exclusiveDbAndTableNameList, dbName, "key_seq", dataSetUID));
                         break;
                     case 2: // Take join operation by PERSON_ID
-                        hiveTaskList = new ArrayList<>(getHiveJoinTasks(hiveJoinParameterList, exclusiveDbAndTableNameList, "person_id", dataSetUID));
+                        hiveTaskList = new ArrayList<>(getHiveJoinTasks(hiveJoinParameterList, exclusiveDbAndTableNameList, dbName, "person_id", dataSetUID));
                         break;
                     default:
                         logger.error(String.format("%s - Invalid join condition: %d", currentThreadName, joinCondition));
@@ -82,7 +92,7 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
 
     private List<HiveTask> getHiveJoinTasks(List<HiveJoinParameter> hiveJoinParameterList,
                                             List<String> exclusiveDbAndTableNameList,
-                                            String joinKey, Integer dataSetUID) {
+                                            String dbName, String joinKey, Integer dataSetUID) {
         final List<HiveTask> hiveTaskList = new ArrayList<>();
 
         logger.debug(String.format("%s - exclusiveDbAndTableNameList.size() at getHiveJoinTasks: %d", currentThreadName, exclusiveDbAndTableNameList.size()));
@@ -103,7 +113,6 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
             //
             // TODO: Target Table Join
             //
-            final String dbName = exclusiveTableJoinParameterList.get(0).getDbName();
             HiveJoinParameter sourceJoinParameter = getSourceJoinParameter(hiveTaskList, exclusiveTableJoinParameterList, dbName, joinKey, dataSetUID);
             hiveTaskList.addAll(getTargetTableJoinTasks(sourceJoinParameter, exclusiveDbAndTableNameList, hiveJoinParameterList, joinKey, dataSetUID));
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -133,7 +142,9 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
         return null;
     }
 
-    private HiveJoinParameter getSourceJoinParameter(List<HiveTask> hiveTaskList, List<HiveJoinParameter> exclusiveTableJoinParameterList, String dbName, String joinKey, Integer dataSetUID) {
+    private HiveJoinParameter getSourceJoinParameter(List<HiveTask> hiveTaskList,
+                                                     List<HiveJoinParameter> exclusiveTableJoinParameterList,
+                                                     String dbName, String joinKey, Integer dataSetUID) {
         if (exclusiveTableJoinParameterList == null) {
             String errorMessage = String.format("%s - exclusiveTableJoinParameterList at getSourceJoinParameter is null.", currentThreadName);
             logger.error(errorMessage);
@@ -146,25 +157,25 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
 
         logger.debug(String.format("%s - exclusiveTableJoinParameterList at getSourceJoinParameter: %s", currentThreadName, exclusiveTableJoinParameterList));
 
-        final String exclusiveJoinedTableName = getExclusiveJoinedTableName(exclusiveTableJoinParameterList, joinKey);
         final String hiveQuery = getExclusiveTableJoinQuery(exclusiveTableJoinParameterList, joinKey);
-        final String integratedDbName = String.format("%s_join_%s_integrated", dbName, joinKey);
-        final String integratedTableName = String.format("%s_%s", exclusiveJoinedTableName, DataProcessorUtil.getHashedString(hiveQuery));
-        final String integratedDbAndHashedTableName = String.format("%s.%s", integratedDbName, integratedTableName);
+        final String exclusiveJoinedTableName = getExclusiveJoinedTableName(exclusiveTableJoinParameterList, joinKey);
+        final String integratedDbName = HiveQueryUtil.getIntegratedDbNameForJoinQuery(dbName, joinKey);
+        final String integratedTableName = HiveQueryUtil.getIntegratedTableNameForJoinQuery(exclusiveJoinedTableName, hiveQuery);
+        final String integratedDbAndHashedTableName = HiveQueryUtil.getDbAndTableNameForQuery(integratedDbName, integratedTableName);
 
         HiveTask hiveTask;
         if (exclusiveTableJoinParameterList.size() == 1) {
             HiveJoinParameter exclusiveTableJoinFirstParameter = exclusiveTableJoinParameterList.get(0);
 
             final String tableName = exclusiveTableJoinFirstParameter.getTableName();
-            final String dbAndTableName = String.format("%s.%s", dbName, tableName);
+            final String dbAndTableName = HiveQueryUtil.getDbAndTableNameForQuery(dbName, tableName);
             final String dbAndHashedTableName = exclusiveTableJoinFirstParameter.getDbAndHashedTableName();
             final String header = exclusiveTableJoinFirstParameter.getHeader();
             final String hdfsLocation = DataProcessorUtil.getHdfsLocation(dbAndTableName, dataSetUID);
 
             hiveTask = new HiveTask(
                     new HiveCreationTask(integratedDbAndHashedTableName, hiveQuery),
-                    new HiveExtractionTask(hdfsLocation, String.format("SELECT * FROM %s", dbAndHashedTableName), header));
+                    new HiveExtractionTask(hdfsLocation, HiveQueryUtil.getSelectAllQuery(dbAndHashedTableName), header));
         } else {
             hiveTask = new HiveTask(new HiveCreationTask(integratedDbAndHashedTableName, hiveQuery), null);
         }
@@ -206,13 +217,14 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
 
         if (exclusiveTableJoinParameterList.size() == 1) {
             HiveJoinParameter hiveJoinParameter = exclusiveTableJoinParameterList.get(0);
-            joinQueryBuilder.append(String.format("SELECT %s FROM %s", joinKey, hiveJoinParameter.getDbAndHashedTableName()));
+            joinQueryBuilder.append(HiveQueryUtil.getSelectSomeQuery(joinKey, hiveJoinParameter.getDbAndHashedTableName()));
         } else {
             try {
                 final HiveJoinParameter firstHiveJoinParameter = exclusiveTableJoinParameterList.get(0);
                 final String entryTableName[] = firstHiveJoinParameter.getDbAndHashedTableName().split("[.]")[1].split("[_]");
                 final String entryAlias = entryTableName[entryTableName.length - 1];
-                joinQueryBuilder.append(String.format("SELECT DISTINCT %s.%s FROM %s %s", entryAlias, joinKey, firstHiveJoinParameter.getDbAndHashedTableName(), entryAlias));
+                joinQueryBuilder.append(String.format("SELECT DISTINCT %s.%s FROM %s %s",
+                        entryAlias, joinKey, firstHiveJoinParameter.getDbAndHashedTableName(), entryAlias));
 
                 for (int i = 0; i < exclusiveTableJoinParameterList.size() - 1; i++) {
                     final HiveJoinParameter currentJoinParameter = exclusiveTableJoinParameterList.get(i);
@@ -224,7 +236,8 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
                     final String currentAlias = currentTableName[currentTableName.length - 1];
                     final String nextAlias = nextTableName[nextTableName.length - 1];
 
-                    joinQueryBuilder.append(String.format(" INNER JOIN %s %s ON (%s.%s = %s.%s)", nextJoinParameter.getDbAndHashedTableName(), nextAlias, currentAlias, joinKey, nextAlias, joinKey));
+                    joinQueryBuilder.append(String.format(" INNER JOIN %s %s ON (%s.%s = %s.%s)",
+                            nextJoinParameter.getDbAndHashedTableName(), nextAlias, currentAlias, joinKey, nextAlias, joinKey));
                 }
             } catch (ArrayIndexOutOfBoundsException e) {
                 logger.error(String.format("%s - Exception occurs at getHiveJoinQuery: %s", currentThreadName, e.getMessage()));
@@ -246,17 +259,20 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
                 final String dbName = targetTableJoinParameter.getDbName();
                 final String tableName = targetTableJoinParameter.getTableName();
 
-                if (modifyDbAndHashedTableNameInTargetTableJoinParameter(targetTableJoinParameter, exclusiveDbAndTableNameList))
-                    logger.info(String.format("%s - dbAndHashedTableName in targetTableJoinParameter changed at getTargetTableJoinTasks: %s", currentThreadName, targetTableJoinParameter.getDbAndHashedTableName()));
+                if (updateDbAndHashedTableName(targetTableJoinParameter, exclusiveDbAndTableNameList))
+                    logger.info(String.format("%s - dbAndHashedTableName of targetTableJoinParameter has been updated by updateDbAndHashedTableName() at getTargetTableJoinTasks: %s",
+                            currentThreadName, targetTableJoinParameter.getDbAndHashedTableName()));
 
                 final String hiveQuery = getTargetTableJoinQuery(sourceJoinParameter, targetTableJoinParameter, joinKey);
-                final String integratedDbName = String.format("%s_join_%s_integrated", dbName, joinKey);
-                final String integratedTableName = String.format("%s_%s", tableName, DataProcessorUtil.getHashedString(hiveQuery));
-                final String integratedDbAndHashedTableName = String.format("%s.%s", integratedDbName, integratedTableName);
+                final String integratedDbName = HiveQueryUtil.getIntegratedDbNameForJoinQuery(dbName, joinKey);
+                final String integratedTableName = HiveQueryUtil.getIntegratedTableNameForJoinQuery(tableName, hiveQuery);
+                final String integratedDbAndHashedTableName = HiveQueryUtil.getDbAndTableNameForQuery(integratedDbName, integratedTableName);
 
-                final String hdfsLocation = DataProcessorUtil.getHdfsLocation(String.format("%s.%s", dbName, tableName), dataSetUID);
+                final String dbAndTableName = HiveQueryUtil.getDbAndTableNameForQuery(dbName, tableName);
+                final String hdfsLocation = DataProcessorUtil.getHdfsLocation(dbAndTableName, dataSetUID);
                 HiveCreationTask hiveCreationTask = new HiveCreationTask(integratedDbAndHashedTableName, hiveQuery);
-                HiveExtractionTask hiveExtractionTask = new HiveExtractionTask(hdfsLocation, String.format("SELECT * FROM %s", integratedDbAndHashedTableName), targetTableJoinParameter.getHeader());
+                HiveExtractionTask hiveExtractionTask = new HiveExtractionTask(hdfsLocation,
+                        HiveQueryUtil.getSelectAllQuery(integratedDbAndHashedTableName), targetTableJoinParameter.getHeader());
 
                 logger.debug(String.format("%s - hiveCreationTask at getTargetTableJoinTasks: %s", currentThreadName, hiveCreationTask));
                 logger.debug(String.format("%s - hiveExtractionTask at getTargetTableJoinTasks: %s", currentThreadName, hiveExtractionTask));
@@ -271,11 +287,8 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
         return hiveTaskList;
     }
 
-    private Boolean modifyDbAndHashedTableNameInTargetTableJoinParameter(HiveJoinParameter targetTableJoinParameter, List<String> exclusiveDbAndTableNameList) {
-        if (targetTableJoinParameter.getIsCreatable())
-            return Boolean.FALSE;
-
-        final String targetDbAndTableName = String.format("%s.%s", targetTableJoinParameter.getDbName(), targetTableJoinParameter.getTableName());
+    private Boolean updateDbAndHashedTableName(HiveJoinParameter targetTableJoinParameter, List<String> exclusiveDbAndTableNameList) {
+        final String targetDbAndTableName = HiveQueryUtil.getDbAndTableNameForQuery(targetTableJoinParameter.getDbName(), targetTableJoinParameter.getTableName());
 
         for (String exclusiveDbAndTableName : exclusiveDbAndTableNameList)
             if (targetDbAndTableName.equals(exclusiveDbAndTableName)) {
@@ -290,8 +303,10 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
                                            HiveJoinParameter targetJoinParameter, String joinKey) {
         StringBuilder joinQueryBuilder = new StringBuilder();
 
-        logger.debug(String.format("%s - sourceJoinParameter.getDbAndHashedTableName() at getTargetTableJoinQuery: %s", currentThreadName, sourceJoinParameter.getDbAndHashedTableName()));
-        logger.debug(String.format("%s - targetJoinParameter.getDbAndHashedTableName() at getTargetTableJoinQuery: %s", currentThreadName, targetJoinParameter.getDbAndHashedTableName()));
+        logger.debug(String.format("%s - sourceJoinParameter.getDbAndHashedTableName() at getTargetTableJoinQuery: %s",
+                currentThreadName, sourceJoinParameter.getDbAndHashedTableName()));
+        logger.debug(String.format("%s - targetJoinParameter.getDbAndHashedTableName() at getTargetTableJoinQuery: %s",
+                currentThreadName, targetJoinParameter.getDbAndHashedTableName()));
 
         try {
             final String sourceTableName[] = sourceJoinParameter.getDbAndHashedTableName().split("[.]")[1].split("[_]");

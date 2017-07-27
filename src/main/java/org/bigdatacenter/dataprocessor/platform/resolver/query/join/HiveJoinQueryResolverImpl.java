@@ -69,8 +69,10 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
             if (parameterMapValue != null)
                 for (String columnName : parameterMapValue.keySet()) {
                     List<String> tableNameList = columnKeyMap.get(columnName);
+                    //noinspection Duplicates
                     if (tableNameList == null) {
                         tableNameList = new ArrayList<>();
+
                         tableNameList.add(dbAndTableName);
                         columnKeyMap.put(columnName, tableNameList);
                     } else {
@@ -103,30 +105,25 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
     public HiveTask buildHiveJoinTaskWithOutExtractionTask(HiveJoinParameter hiveJoinParameter,
                                                            HiveCreationTask hiveCreationTask,
                                                            Map<String/*MapKey: Year*/, List<HiveJoinParameter>> hiveJoinParameterListMap) {
-        final String dbName = hiveJoinParameter.getDbName();
-        final String tableName = hiveJoinParameter.getTableName();
-        final String hashedDbAndTableName = hiveJoinParameter.getDbAndHashedTableName();
-        final String header = hiveJoinParameter.getHeader();
-        final Boolean isCreatable = hiveJoinParameter.getIsCreatable();
-
         try {
-            final String tableNameSplitted[] = tableName.split("[_]");
+            final String tableNameSplitted[] = hiveJoinParameter.getTableName().split("[_]");
             final String mapKey = tableNameSplitted[tableNameSplitted.length - 1];
 
             List<HiveJoinParameter> hiveJoinParameterList = hiveJoinParameterListMap.get(mapKey);
+            //noinspection Duplicates
             if (hiveJoinParameterList == null) {
                 hiveJoinParameterList = new ArrayList<>();
-                hiveJoinParameterList.add(new HiveJoinParameter(dbName, tableName, hashedDbAndTableName, header, isCreatable));
+                hiveJoinParameterList.add(hiveJoinParameter);
                 hiveJoinParameterListMap.put(mapKey, hiveJoinParameterList);
             } else {
-                hiveJoinParameterList.add(new HiveJoinParameter(dbName, tableName, hashedDbAndTableName, header, isCreatable));
+                hiveJoinParameterList.add(hiveJoinParameter);
             }
         } catch (ArrayIndexOutOfBoundsException e) {
             logger.error(String.format("%s - Exception occurs at buildHiveJoinTaskWithOutExtractionTask: %s", currentThreadName, e.getMessage()));
             throw new ArrayIndexOutOfBoundsException(e.getMessage());
         }
 
-        if (isCreatable)
+        if (hiveJoinParameter.getIsCreatable())
             return new HiveTask(hiveCreationTask, null);
 
         return null;
