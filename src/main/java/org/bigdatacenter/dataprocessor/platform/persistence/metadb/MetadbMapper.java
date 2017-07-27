@@ -38,6 +38,7 @@ public interface MetadbMapper {
     //
     MetaDatabaseInfo readMetaDatabase(@Param("edl_idx") Integer edlIdx);
     MetaTableInfo readMetaTable(@Param("etl_idx") Integer etlIdx);
+    List<String> readMetaTableNames(@Param("edl_idx") Integer edlIdx, @Param("tb_year") Integer tbYear);
     List<MetaColumnInfo> readMetaColumns1(@Param("ecl_idx") Integer eclIdx);
     List<MetaColumnInfo> readMetaColumns2(@Param("edl_idx") Integer edlIdx, @Param("ecl_ref") String eclRef, @Param("ecl_year") Integer eclYear);
     List<String> readEngColumnNames(@Param("etl_eng_name") String etlEngName);

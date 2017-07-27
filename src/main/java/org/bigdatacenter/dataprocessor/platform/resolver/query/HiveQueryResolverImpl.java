@@ -84,6 +84,8 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                 List<MetaColumnInfo> metaColumnInfoList = metadbService.findMetaColumns(
                         requestInfo.getDatasetID(), requestFilterInfo.getFilterEngName(), Integer.parseInt(requestYearInfo.getYearName()));
 
+                logger.debug(String.format("%s - %s", currentThreadName, metaColumnInfoList));
+
                 for (MetaColumnInfo metaColumnInfo : metaColumnInfoList) {
                     MetaTableInfo metaTableInfo = metadbService.findMetaTable(metaColumnInfo.getEtl_idx());
                     if (metaTableInfo == null) {
@@ -103,7 +105,9 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
             }
         }
 
-        return new ExtractionParameter(requestInfo, indicator, convertTaskInfoListToParameterMap(taskInfoList));
+        logger.debug("Before return ExtractionParameter");
+
+        return new ExtractionParameter(requestInfo, indicator, convertTaskInfoListToParameterMap(requestInfo, metaDatabaseInfo, requestYearInfoList, taskInfoList));
     }
 
     @Override
@@ -134,21 +138,32 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
             logger.debug(String.format("%s - header in buildExtractionRequest: %s", currentThreadName, header));
             hiveQueryBuilder.append(String.format("SELECT %s FROM %s", header, dbAndTableName));
 
+            Boolean isCreatable = Boolean.FALSE;
             Map<String/*column*/, List<String>/*values*/> conditionMap = parameterMap.get(dbAndTableName);
-            List<String> columnNameList = new ArrayList<>();
-            columnNameList.addAll(conditionMap.keySet());
+            if (conditionMap != null) {
+                List<String> columnNameList = new ArrayList<>();
+                columnNameList.addAll(conditionMap.keySet());
 
-            if (columnNameList.size() > 0)
-                hiveQueryBuilder.append(buildWhereClause(columnNameList, conditionMap));
+                if (columnNameList.size() > 0)
+                    hiveQueryBuilder.append(buildWhereClause(columnNameList, conditionMap));
+
+                isCreatable = Boolean.TRUE;
+            }
+
+            logger.debug("Before calling buildHiveTask");
 
             try {
-                hiveTaskList.add(buildHiveTask(extractionParameter, hiveTaskListForExtractionTask,
-                        hiveJoinParameterListMap, hiveQueryBuilder.toString(), dbAndTableName, header));
+                HiveTask hiveTask = buildHiveTask(extractionParameter, hiveTaskListForExtractionTask,
+                        hiveJoinParameterListMap, hiveQueryBuilder.toString(), dbAndTableName, header, isCreatable);
+                if (hiveTask != null)
+                    hiveTaskList.add(hiveTask);
             } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
                 logger.error(String.format("%s - During the building hive task, exception occurs: hiveTask is null.", currentThreadName));
                 e.printStackTrace();
                 return null;
             }
+
+            logger.debug("After calling buildHiveTask");
         }
 
         if (requestInfo.getJoinCondition() > 0)
@@ -170,7 +185,8 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
     private HiveTask buildHiveTask(ExtractionParameter extractionParameter,
                                    List<HiveTask> hiveTaskListForExtractionTask,
                                    Map<String/*MapKey: Year*/, List<HiveJoinParameter>> hiveJoinParameterListMap,
-                                   String hiveQuery, String dbAndTableName, String header) {
+                                   String hiveQuery, String dbAndTableName,
+                                   String header, Boolean isCreatable) {
         final RequestInfo requestInfo = extractionParameter.getRequestInfo();
         final Integer dataSetUID = requestInfo.getDataSetUID();
         final Integer joinCondition = requestInfo.getJoinCondition();
@@ -194,7 +210,7 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                     break;
                 case 1: // Join Query with KEY_SEQ
                 case 2: // Join Query with PERSON_ID
-                    HiveJoinParameter hiveJoinParameter = new HiveJoinParameter(dbName, tableName, dbAndHashedTableName, header);
+                    HiveJoinParameter hiveJoinParameter = new HiveJoinParameter(dbName, tableName, dbAndHashedTableName, header, isCreatable);
                     hiveTask = hiveJoinQueryResolver.buildHiveJoinTaskWithOutExtractionTask(hiveJoinParameter, hiveCreationTask, hiveJoinParameterListMap);
                     break;
                 default:
@@ -241,9 +257,32 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
         return indicatorBuilder.toString();
     }
 
-    private Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> convertTaskInfoListToParameterMap(List<TaskInfo> taskInfoList) {
+    private Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> convertTaskInfoListToParameterMap(RequestInfo requestInfo,
+                                                                                                                     MetaDatabaseInfo metaDatabaseInfo,
+                                                                                                                     List<RequestYearInfo> requestYearInfoList,
+                                                                                                                     List<TaskInfo> taskInfoList) {
         Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap = new HashMap<>();
 
+        //
+        // TODO: Fill parameterMap Keys with all tables of the db
+        //
+        try {
+            if (requestInfo.getJoinCondition() > 0) {
+                List<String> metaTableNames = new ArrayList<>();
+                for (RequestYearInfo requestYearInfo : requestYearInfoList)
+                    metaTableNames.addAll(metadbService.findMetaTableNames(metaDatabaseInfo.getEdl_idx(), Integer.parseInt(requestYearInfo.getYearName())));
+
+                for (String metaTableName : metaTableNames)
+                    if (!metaTableName.contains("ykiho"))
+                        parameterMap.put(String.format("%s.%s", metaDatabaseInfo.getEdl_eng_name(), metaTableName), null);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //
+        // TODO: Process taskInfoList
+        //
         for (TaskInfo taskInfo : taskInfoList) {
             String parameterKey = String.format("%s.%s", taskInfo.getDatabaseName(), taskInfo.getTableName());
 

@@ -41,12 +41,14 @@ public class RestException extends RuntimeException {
 
     public RestException(String message, HttpServletResponse httpServletResponse) {
         super(message);
+        printStackTrace();
         logger.error(String.format("%s - REST Exception occurs: %s", currentThreadName, message));
         httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
     }
 
     public RestException(Integer dataSetUID, String message, HttpServletResponse httpServletResponse) {
         super(message);
+        printStackTrace();
         //metadbService.updateProcessState(dataSetUID, MetadbMapper.PROCESS_STATE_REJECTED);
         logger.error(String.format("%s - REST Exception occurs: %s", currentThreadName, message));
         httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);

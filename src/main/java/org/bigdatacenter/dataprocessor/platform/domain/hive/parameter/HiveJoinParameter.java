@@ -17,4 +17,5 @@ public class HiveJoinParameter implements Serializable {
     private String tableName;
     private String dbAndHashedTableName;
     private String header;
+    private Boolean isCreatable;
 }

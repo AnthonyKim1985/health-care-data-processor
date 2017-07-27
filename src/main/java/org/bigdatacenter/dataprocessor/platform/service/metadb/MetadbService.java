@@ -36,6 +36,8 @@ public interface MetadbService {
 
     MetaTableInfo findMetaTable(Integer etlIdx);
 
+    List<String> findMetaTableNames(Integer edlIdx, Integer tbYear);
+
     List<MetaColumnInfo> findMetaColumns(Integer eclIdx);
 
     List<MetaColumnInfo> findMetaColumns(Integer edlIdx, String eclRef, Integer eclYear);

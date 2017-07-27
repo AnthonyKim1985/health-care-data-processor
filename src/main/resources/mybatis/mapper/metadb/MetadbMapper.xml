@@ -60,6 +60,11 @@
         SELECT * FROM health_care_ui.chu_tb_list WHERE etl_idx = #{etl_idx};
     </select>
 
+    <!-- List<String> readMetaTableNames(@Param("edl_idx") Integer edlIdx, @Param("tb_year") Integer tbYear) -->
+    <select id="readMetaTableNames" resultType="java.lang.String">
+        SELECT etl_eng_name FROM health_care_ui.chu_tb_list WHERE edl_idx = #{edl_idx} AND tb_year = #{tb_year};
+    </select>
+
     <!-- List<MetaColumnInfo> readMetaColumns1(@Param("ecl_idx") Integer eclIdx) -->
     <select id="readMetaColumns1" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaColumnInfo">
         SELECT * FROM health_care_ui.chu_col_list WHERE ecl_idx = #{ecl_idx};
