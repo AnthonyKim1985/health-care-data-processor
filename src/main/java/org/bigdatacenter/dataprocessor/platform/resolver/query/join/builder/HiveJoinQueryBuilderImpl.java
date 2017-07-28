@@ -1,7 +1,6 @@
 package org.bigdatacenter.dataprocessor.platform.resolver.query.join.builder;
 
 import org.bigdatacenter.dataprocessor.common.DataProcessorUtil;
-import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.query.HiveJoinParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.HiveTask;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.creation.HiveCreationTask;
@@ -33,11 +32,11 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
     private MetadbService metadbService;
 
     @Override
-    public List<HiveTask> buildHiveJoinQueryTasks(ExtractionParameter extractionParameter,
-                                                  Integer joinTaskType,
-                                                  Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMapValue,
-                                                  Map<Integer/*Year*/, List<HiveJoinParameter>> hiveJoinParameterListMap) {
-        final RequestInfo requestInfo = extractionParameter.getRequestInfo();
+    public List<HiveTask> buildHiveJoinQueryTasks(Integer joinTaskType,
+                                                  RequestInfo requestInfo,
+                                                  List<HiveJoinParameter> hiveJoinParameterList,
+                                                  Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMapValue
+    ) {
         final Integer joinCondition = requestInfo.getJoinCondition();
         final Integer dataSetUID = requestInfo.getDataSetUID();
 
@@ -48,32 +47,28 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
 
         final List<String> exclusiveDbAndTableNameList = getExclusiveDbAndTableNames(columnKeyMapValue);
         logger.debug(String.format("%s - exclusiveDbAndTableNameList: %s", currentThreadName, exclusiveDbAndTableNameList));
+        logger.debug(String.format("%s - hiveJoinParameterList: %s", currentThreadName, hiveJoinParameterList));
 
-        for (Integer year : hiveJoinParameterListMap.keySet()) {
-            final List<HiveJoinParameter> hiveJoinParameterList = hiveJoinParameterListMap.get(year);
-
-            logger.debug(String.format("%s - key: %d", currentThreadName, year));
-            logger.debug(String.format("%s - hiveJoinParameterList: %s", currentThreadName, hiveJoinParameterList));
-            try {
-                switch (joinCondition) {
-                    case 0:
-                        logger.info(String.format("%s - No Join Operation", currentThreadName));
-                        break;
-                    case 1: // Take join operation by KEY_SEQ
-                        hiveTaskList = new ArrayList<>(getHiveJoinTasks(hiveJoinParameterList, exclusiveDbAndTableNameList, joinTaskType, dbName, "key_seq", dataSetUID));
-                        break;
-                    case 2: // Take join operation by PERSON_ID
-                        hiveTaskList = new ArrayList<>(getHiveJoinTasks(hiveJoinParameterList, exclusiveDbAndTableNameList, joinTaskType, dbName, "person_id", dataSetUID));
-                        break;
-                    default:
-                        logger.error(String.format("%s - Invalid join condition: %d", currentThreadName, joinCondition));
-                        throw new NullPointerException();
-                }
-            } catch (ArrayIndexOutOfBoundsException e) {
-                logger.error(String.format("%s - Exception occurs at buildHiveJoinQueryTasks: %s", currentThreadName, e.getMessage()));
-                throw new ArrayIndexOutOfBoundsException(e.getMessage());
+        try {
+            switch (joinCondition) {
+                case 0:
+                    logger.info(String.format("%s - No Join Operation", currentThreadName));
+                    break;
+                case 1: // Take join operation by KEY_SEQ
+                    hiveTaskList = new ArrayList<>(getHiveJoinTasks(hiveJoinParameterList, exclusiveDbAndTableNameList, joinTaskType, dbName, "key_seq", dataSetUID));
+                    break;
+                case 2: // Take join operation by PERSON_ID
+                    hiveTaskList = new ArrayList<>(getHiveJoinTasks(hiveJoinParameterList, exclusiveDbAndTableNameList, joinTaskType, dbName, "person_id", dataSetUID));
+                    break;
+                default:
+                    logger.error(String.format("%s - Invalid join condition: %d", currentThreadName, joinCondition));
+                    throw new NullPointerException();
             }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            logger.error(String.format("%s - Exception occurs at buildHiveJoinQueryTasks: %s", currentThreadName, e.getMessage()));
+            throw new ArrayIndexOutOfBoundsException(e.getMessage());
         }
+
 
         return hiveTaskList;
     }
@@ -95,7 +90,8 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
     private List<HiveTask> getHiveJoinTasks(List<HiveJoinParameter> hiveJoinParameterList,
                                             List<String> exclusiveDbAndTableNameList,
                                             Integer joinTaskType, String dbName,
-                                            String joinKey, Integer dataSetUID) {
+                                            String joinKey, Integer dataSetUID
+    ) {
         final List<HiveTask> hiveTaskList = new ArrayList<>();
 
         logger.debug(String.format("%s - exclusiveDbAndTableNameList.size() at getHiveJoinTasks: %d", currentThreadName, exclusiveDbAndTableNameList.size()));
@@ -147,7 +143,8 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
 
     private HiveJoinParameter getSourceJoinParameter(List<HiveTask> hiveTaskList,
                                                      List<HiveJoinParameter> exclusiveTableJoinParameterList,
-                                                     String dbName, String joinKey, Integer dataSetUID) {
+                                                     String dbName, String joinKey, Integer dataSetUID
+    ) {
         if (exclusiveTableJoinParameterList == null) {
             String errorMessage = String.format("%s - exclusiveTableJoinParameterList at getSourceJoinParameter is null.", currentThreadName);
             logger.error(errorMessage);
@@ -167,8 +164,10 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
         final String integratedDbAndHashedTableName = HiveQueryUtil.getDbAndTableNameForQuery(integratedDbName, integratedTableName);
 
         HiveTask hiveTask;
-        if (exclusiveTableJoinParameterList.size() == 1) {
-            HiveJoinParameter exclusiveTableJoinFirstParameter = exclusiveTableJoinParameterList.get(0);
+        final Integer lastIndex = exclusiveTableJoinParameterList.size() - 1;
+
+        if (lastIndex == 0) {
+            HiveJoinParameter exclusiveTableJoinFirstParameter = exclusiveTableJoinParameterList.get(lastIndex);
 
             final String tableName = exclusiveTableJoinFirstParameter.getTableName();
             final String dbAndTableName = HiveQueryUtil.getDbAndTableNameForQuery(dbName, tableName);
@@ -254,7 +253,8 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
     private List<HiveTask> getTargetTableJoinTasks(HiveJoinParameter sourceJoinParameter,
                                                    List<String> exclusiveDbAndTableNameList,
                                                    List<HiveJoinParameter> targetTableJoinParameterList,
-                                                   Integer joinTaskType, String joinKey, Integer dataSetUID) {
+                                                   Integer joinTaskType, String joinKey, Integer dataSetUID
+    ) {
         List<HiveTask> hiveTaskList = new ArrayList<>();
 
         try {

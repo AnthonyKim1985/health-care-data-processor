@@ -193,7 +193,8 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                                    List<HiveTask> hiveTaskListForExtractionTask,
                                    Map<Integer/*Year*/, List<HiveJoinParameter>> hiveJoinParameterListMap,
                                    ParameterMapKey parameterMapKey,
-                                   String hiveQuery, String header, Boolean isCreatable) {
+                                   String hiveQuery, String header, Boolean isCreatable
+    ) {
         final RequestInfo requestInfo = extractionParameter.getRequestInfo();
         final Integer dataSetUID = requestInfo.getDataSetUID();
         final Integer joinCondition = requestInfo.getJoinCondition();
@@ -277,7 +278,8 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
     private Map<ParameterMapKey, Map<String/*column*/, List<String>/*values*/>> convertTaskInfoListToParameterMap(RequestInfo requestInfo,
                                                                                                                   MetaDatabaseInfo metaDatabaseInfo,
                                                                                                                   List<RequestYearInfo> requestYearInfoList,
-                                                                                                                  List<TaskInfo> taskInfoList) {
+                                                                                                                  List<TaskInfo> taskInfoList
+    ) {
         Map<ParameterMapKey, Map<String/*column*/, List<String>/*values*/>> parameterMap = new HashMap<>();
 
         //
@@ -305,25 +307,24 @@ public class HiveQueryResolverImpl implements HiveQueryResolver {
                 continue;
             }
 
-            Map<String/*column*/, List<String>/*values*/> parameterValue = parameterMap.get(parameterMapKey);
+            Map<String/*column*/, List<String>/*values*/> parameterMapValue = parameterMap.get(parameterMapKey);
 
             List<String> values;
-            if (parameterValue == null) {
+            if (parameterMapValue == null) {
+                parameterMapValue = new HashMap<>();
                 values = new ArrayList<>();
+
                 values.add(taskInfo.getValue());
-
-                parameterValue = new HashMap<>();
-                parameterValue.put(taskInfo.getColumnName(), values);
-
-                parameterMap.put(parameterMapKey, parameterValue);
+                parameterMapValue.put(taskInfo.getColumnName(), values);
+                parameterMap.put(parameterMapKey, parameterMapValue);
             } else {
-                values = parameterValue.get(taskInfo.getColumnName());
+                values = parameterMapValue.get(taskInfo.getColumnName());
 
                 if (values == null) {
                     values = new ArrayList<>();
-                    values.add(taskInfo.getValue());
 
-                    parameterValue.put(taskInfo.getColumnName(), values);
+                    values.add(taskInfo.getValue());
+                    parameterMapValue.put(taskInfo.getColumnName(), values);
                 } else {
                     values.add(taskInfo.getValue());
                 }
