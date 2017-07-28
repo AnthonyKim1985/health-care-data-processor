@@ -2,6 +2,7 @@ package org.bigdatacenter.dataprocessor.platform.domain.hive.extraction;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.key.ParameterMapKey;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestInfo;
 
 import java.io.Serializable;
@@ -16,5 +17,5 @@ import java.util.Map;
 public class ExtractionParameter implements Serializable {
     private RequestInfo requestInfo;
     private String indicator;
-    private Map<String/*db.table*/, Map<String/*column*/, List<String>/*values*/>> parameterMap;
+    private Map<ParameterMapKey, Map<String/*column*/, List<String>/*values*/>> parameterMap;
 }

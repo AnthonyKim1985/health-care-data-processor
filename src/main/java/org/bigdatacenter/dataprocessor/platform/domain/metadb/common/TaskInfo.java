@@ -15,7 +15,7 @@ import java.io.Serializable;
 public class TaskInfo implements Serializable {
     private String databaseName;
     private String tableName;
+    private Integer year;
     private String columnName;
-
     private String value;
 }

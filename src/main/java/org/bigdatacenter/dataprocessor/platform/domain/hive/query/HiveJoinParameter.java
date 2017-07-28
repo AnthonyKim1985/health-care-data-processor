@@ -1,4 +1,4 @@
-package org.bigdatacenter.dataprocessor.platform.domain.hive.parameter;
+package org.bigdatacenter.dataprocessor.platform.domain.hive.query;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
