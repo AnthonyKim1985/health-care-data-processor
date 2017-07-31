@@ -76,6 +76,11 @@
         SELECT * FROM health_care_ui.chu_col_list_ref WHERE edl_idx = #{edl_idx} AND ecl_ref = #{ecl_ref} AND ecl_year = #{ecl_year};
     </select>
 
+    <!-- List<MetaColumnInfo> readMetaColumnsForIndicatorHeader(@Param("eil_idx") Integer eilIdx) -->
+    <select id="readMetaColumnsForIndicatorHeader" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaColumnInfo">
+        SELECT col.* FROM health_care_ui.chu_col_list_ref col INNER JOIN health_care_ui.chu_indicator_column_relation ind ON col.ecl_idx = ind.ecl_idx WHERE ind.eil_idx = #{eil_idx} ORDER BY col.ecl_idx ASC;
+    </select>
+
     <!-- List<MetaRelationIndicatorWithColumn> readMetaRelationIndicatorWithColumn(@Param("eil_idx") Integer eilIdx) -->
     <select id="readMetaRelationIndicatorWithColumn"
             resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaRelationIndicatorWithColumn">

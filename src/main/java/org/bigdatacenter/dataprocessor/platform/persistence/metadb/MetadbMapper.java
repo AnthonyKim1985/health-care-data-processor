@@ -43,6 +43,8 @@ public interface MetadbMapper {
     List<MetaColumnInfo> readMetaColumns2(@Param("edl_idx") Integer edlIdx, @Param("ecl_ref") String eclRef, @Param("ecl_year") Integer eclYear);
     List<String> readEngColumnNames(@Param("etl_eng_name") String etlEngName);
     List<MetaRelationIndicatorWithColumn> readMetaRelationIndicatorWithColumn(@Param("eil_idx") Integer eilIdx);
+    List<MetaColumnInfo> readMetaColumnsForIndicatorHeader(@Param("eil_idx") Integer eilIdx);
+
 
 
     //

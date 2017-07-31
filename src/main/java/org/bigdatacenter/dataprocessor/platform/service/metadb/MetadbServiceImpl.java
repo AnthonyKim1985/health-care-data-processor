@@ -99,6 +99,11 @@ public class MetadbServiceImpl implements MetadbService {
     }
 
     @Override
+    public List<MetaColumnInfo> findMetaColumnsForIndicatorHeader(Integer eilIdx) {
+        return metadbMapper.readMetaColumnsForIndicatorHeader(eilIdx);
+    }
+
+    @Override
     public void insertFtpRequest(FtpInfo ftpInfo) {
         metadbMapper.createFtpRequest(ftpInfo);
     }

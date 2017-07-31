@@ -156,14 +156,12 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
         final String hiveQuery = getExclusiveTableJoinQuery(exclusiveTableJoinParameterList, joinKey);
         final String exclusiveJoinedTableName = getExclusiveJoinedTableName(exclusiveTableJoinParameterList, joinKey);
         final String integratedDbName = HiveQueryUtil.getIntegratedDbNameForJoinQuery(dbName, joinKey);
-        final String integratedTableName = HiveQueryUtil.getIntegratedTableNameForJoinQuery(exclusiveJoinedTableName, hiveQuery);
-        final String integratedDbAndHashedTableName = HiveQueryUtil.getDbAndTableNameForQuery(integratedDbName, integratedTableName);
+        final String integratedHashedTableName = HiveQueryUtil.getIntegratedTableNameForJoinQuery(exclusiveJoinedTableName, hiveQuery);
+        final String integratedDbAndHashedTableName = HiveQueryUtil.getDbAndTableNameForQuery(integratedDbName, integratedHashedTableName);
 
         HiveTask hiveTask;
-        final Integer lastIndex = exclusiveTableJoinParameterList.size() - 1;
-
-        if (lastIndex == 0) {
-            HiveJoinParameter exclusiveTableJoinFirstParameter = exclusiveTableJoinParameterList.get(lastIndex);
+        if (exclusiveTableJoinParameterList.size() == 1) {
+            HiveJoinParameter exclusiveTableJoinFirstParameter = exclusiveTableJoinParameterList.get(0);
 
             final String tableName = exclusiveTableJoinFirstParameter.getTableName();
             final String dbAndTableName = HiveQueryUtil.getDbAndTableNameForQuery(dbName, tableName);
@@ -180,7 +178,7 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
 
         hiveTaskList.add(hiveTask);
 
-        HiveJoinParameter hiveJoinParameter = new HiveJoinParameter(integratedDbName, integratedTableName, integratedDbAndHashedTableName, joinKey, Boolean.TRUE);
+        HiveJoinParameter hiveJoinParameter = new HiveJoinParameter(integratedDbName, integratedHashedTableName, integratedDbAndHashedTableName, joinKey, Boolean.TRUE);
         logger.debug(String.format("%s - hiveTask at getSourceJoinParameter: %s", currentThreadName, hiveTask));
         logger.debug(String.format("%s - hiveJoinParameter at getSourceJoinParameter: %s", currentThreadName, hiveJoinParameter));
 
@@ -234,8 +232,8 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
                     final String currentAlias = currentTableName[currentTableName.length - 1];
                     final String nextAlias = nextTableName[nextTableName.length - 1];
 
-                    joinQueryBuilder.append(String.format(" INNER JOIN %s %s ON (%s.%s = %s.%s)",
-                            nextJoinParameter.getDbAndHashedTableName(), nextAlias, currentAlias, /*joinKey*/ "key_seq", nextAlias, /*joinKey*/ "key_seq"));
+                    joinQueryBuilder.append(String.format(" INNER JOIN %s %s ON (%s.key_seq = %s.key_seq)",
+                            nextJoinParameter.getDbAndHashedTableName(), nextAlias, currentAlias, nextAlias));
                 }
             } catch (ArrayIndexOutOfBoundsException e) {
                 logger.error(String.format("%s - Exception occurs at getHiveJoinQuery: %s", currentThreadName, e.getMessage()));
@@ -265,8 +263,8 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
 
                 final String hiveQuery = getTargetTableJoinQuery(sourceJoinParameter, targetTableJoinParameter, joinKey);
                 final String integratedDbName = HiveQueryUtil.getIntegratedDbNameForJoinQuery(dbName, joinKey);
-                final String integratedTableName = HiveQueryUtil.getIntegratedTableNameForJoinQuery(tableName, hiveQuery);
-                final String integratedDbAndHashedTableName = HiveQueryUtil.getDbAndTableNameForQuery(integratedDbName, integratedTableName);
+                final String integratedHashedTableName = HiveQueryUtil.getIntegratedTableNameForJoinQuery(tableName, hiveQuery);
+                final String integratedDbAndHashedTableName = HiveQueryUtil.getDbAndTableNameForQuery(integratedDbName, integratedHashedTableName);
 
                 final String dbAndTableName = HiveQueryUtil.getDbAndTableNameForQuery(dbName, tableName);
                 final String hdfsLocation = DataProcessorUtil.getHdfsLocation(dbAndTableName, dataSetUID);

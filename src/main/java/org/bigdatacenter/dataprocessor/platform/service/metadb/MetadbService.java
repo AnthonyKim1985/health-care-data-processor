@@ -46,6 +46,8 @@ public interface MetadbService {
 
     List<MetaRelationIndicatorWithColumn> findMetaRelationIndicatorWithColumn(Integer eilIdx);
 
+    List<MetaColumnInfo> findMetaColumnsForIndicatorHeader(Integer eilIdx);
+
     void insertFtpRequest(FtpInfo ftpInfo);
 
     boolean isExecutedJob(Integer dataSetUID);
