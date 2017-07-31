@@ -43,7 +43,7 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
         final MetaDatabaseInfo metaDatabaseInfo = metadbService.findMetaDatabase(requestInfo.getDatasetID());
         final String dbName = metaDatabaseInfo.getEdl_eng_name();
 
-        List<HiveTask> hiveTaskList = null;
+        List<HiveTask> hiveTaskList;
 
         final List<String> exclusiveDbAndTableNameList = getExclusiveDbAndTableNames(columnKeyMapValue);
         logger.debug(String.format("%s - exclusiveDbAndTableNameList: %s", currentThreadName, exclusiveDbAndTableNameList));
@@ -51,9 +51,6 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
 
         try {
             switch (joinCondition) {
-                case 0:
-                    logger.info(String.format("%s - No Join Operation", currentThreadName));
-                    break;
                 case 1: // Take join operation by KEY_SEQ
                     hiveTaskList = new ArrayList<>(getHiveJoinTasks(hiveJoinParameterList, exclusiveDbAndTableNameList, joinTaskType, dbName, "key_seq", dataSetUID));
                     break;
@@ -68,7 +65,6 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
             logger.error(String.format("%s - Exception occurs at buildHiveJoinQueryTasks: %s", currentThreadName, e.getMessage()));
             throw new ArrayIndexOutOfBoundsException(e.getMessage());
         }
-
 
         return hiveTaskList;
     }
@@ -239,7 +235,7 @@ public class HiveJoinQueryBuilderImpl implements HiveJoinQueryBuilder {
                     final String nextAlias = nextTableName[nextTableName.length - 1];
 
                     joinQueryBuilder.append(String.format(" INNER JOIN %s %s ON (%s.%s = %s.%s)",
-                            nextJoinParameter.getDbAndHashedTableName(), nextAlias, currentAlias, joinKey, nextAlias, joinKey));
+                            nextJoinParameter.getDbAndHashedTableName(), nextAlias, currentAlias, /*joinKey*/ "key_seq", nextAlias, /*joinKey*/ "key_seq"));
                 }
             } catch (ArrayIndexOutOfBoundsException e) {
                 logger.error(String.format("%s - Exception occurs at getHiveJoinQuery: %s", currentThreadName, e.getMessage()));

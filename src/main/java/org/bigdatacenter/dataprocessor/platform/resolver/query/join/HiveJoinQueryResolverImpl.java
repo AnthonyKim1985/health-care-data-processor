@@ -41,6 +41,18 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
         final RequestInfo requestInfo = extractionParameter.getRequestInfo();
         final Map<Integer/*Year*/, Map<String/*Column Name*/, List<String/*Table Name*/>>> columnKeyMap = getColumnKeyMap(extractionParameter.getParameterMap());
 
+        switch (requestInfo.getJoinCondition()) {
+            case 1:
+                logger.info(String.format("%s - Take join operation by KEY_SEQ", currentThreadName));
+                break;
+            case 2:
+                logger.info(String.format("%s - Take join operation by PERSON_ID", currentThreadName));
+                break;
+            default:
+                logger.error(String.format("%s - Invalid join operation option", currentThreadName));
+                throw new NullPointerException();
+        }
+
         try {
             for (Integer year : columnKeyMap.keySet()) {
                 final Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMapValue = columnKeyMap.get(year);
@@ -118,18 +130,18 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
     @Override
     public Integer getJoinTaskType(Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMap) {
         Integer joinTaskType;
-        Map<String/*Table name*/, Boolean> validationMap = new HashMap<>();
+        Map<String/*Table name*/, Boolean> validationMapForBeingExclusiveColumns = new HashMap<>();
 
         for (String columnName : columnKeyMap.keySet()) {
             List<String> tableNameList = columnKeyMap.get(columnName);
             if (tableNameList.size() == 1) {
                 String exclusiveTableName = tableNameList.get(0);
-                if (validationMap.get(exclusiveTableName) == null)
-                    validationMap.put(exclusiveTableName, Boolean.TRUE);
+                if (validationMapForBeingExclusiveColumns.get(exclusiveTableName) == null)
+                    validationMapForBeingExclusiveColumns.put(exclusiveTableName, Boolean.TRUE);
             }
         }
 
-        switch (validationMap.size()) {
+        switch (validationMapForBeingExclusiveColumns.size()) {
             case 0:
                 joinTaskType = HiveJoinQueryResolver.EXCLUSIVE_COLUMN_ZERO;
                 break;
