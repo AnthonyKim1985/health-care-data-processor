@@ -43,13 +43,18 @@ public class DataExtractionController {
     //
     @RequestMapping(value = "dataExtraction", method = RequestMethod.GET)
     public void dataExtraction(@RequestParam String dataSetUID, HttpServletResponse httpServletResponse) {
-        runDataExtraction(dataSetUID, httpServletResponse);
+        try {
+            runDataExtraction(dataSetUID, httpServletResponse);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void runDataExtraction(String dataSetUID, HttpServletResponse httpServletResponse) {
-        if (!DataProcessorUtil.isNumeric(dataSetUID)) {
+        if (!DataProcessorUtil.isNumeric(dataSetUID))
             throw new RestException(String.format(BAD_REQUEST_MESSAGE, "dataSetUID is not numeric."), httpServletResponse);
-        }
+
         logger.info(String.format("%s - Extraction data set UID: %s", currentThreadName, dataSetUID));
 
         if (metadbService.isExecutedJob(Integer.parseInt(dataSetUID))) {
@@ -58,19 +63,23 @@ public class DataExtractionController {
         }
         logger.info(String.format("%s - dataSetUID: %s", currentThreadName, dataSetUID));
 
-        ExtractionParameter extractionParameter = hiveQueryResolver.buildExtractionParameter(Integer.parseInt(dataSetUID));
-        if (extractionParameter == null) {
+        ExtractionParameter extractionParameter;
+        try {
+            extractionParameter = hiveQueryResolver.buildExtractionParameter(Integer.parseInt(dataSetUID));
+            logger.info(String.format("%s - extractionParameter: %s", currentThreadName, extractionParameter));
+        } catch (Exception e) {
             metadbService.updateProcessState(Integer.parseInt(dataSetUID), MetadbMapper.PROCESS_STATE_REJECTED);
             throw new RestException(Integer.parseInt(dataSetUID), String.format(BAD_REQUEST_MESSAGE, "Couldn't make the execution parameter map. It may be some meta data problem. Please check it out."), httpServletResponse);
         }
-        logger.info(String.format("%s - extractionParameter: %s", currentThreadName, extractionParameter));
 
-        ExtractionRequest extractionRequest = hiveQueryResolver.buildExtractionRequest(extractionParameter);
-        if (extractionRequest == null) {
+        ExtractionRequest extractionRequest;
+        try {
+            extractionRequest = hiveQueryResolver.buildExtractionRequest(extractionParameter);
+            logger.info(String.format("%s - buildExtractionRequest: %s", currentThreadName, extractionRequest));
+        } catch (Exception e) {
             metadbService.updateProcessState(Integer.parseInt(dataSetUID), MetadbMapper.PROCESS_STATE_REJECTED);
             throw new RestException(Integer.parseInt(dataSetUID), String.format(BAD_REQUEST_MESSAGE, "Couldn't make the execution request object. It may be some meta data problem. Please check it out."), httpServletResponse);
         }
-        logger.info(String.format("%s - buildExtractionRequest: %s", currentThreadName, extractionRequest));
 
         synchronized (this) {
             rabbitTemplate.convertAndSend(RabbitMQConfig.EXTRACTION_REQUEST_QUEUE, extractionRequest);

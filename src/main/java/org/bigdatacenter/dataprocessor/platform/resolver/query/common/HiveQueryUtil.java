@@ -18,11 +18,11 @@ public class HiveQueryUtil {
         return String.format("%s_%s", tableName, DataProcessorUtil.getHashedString(hiveQuery));
     }
 
-    public static String getDbAndTableNameForQuery(String dbName, String tableName) {
+    public static String concatDbAndTableName(String dbName, String tableName) {
         return String.format("%s.%s", dbName, tableName);
     }
 
-    public static String getDbAndTableNameForQuery(String dbName, String joinKey, String tableName, String hiveQuery) {
+    public static String concatDbAndTableName(String dbName, String joinKey, String tableName, String hiveQuery) {
         return String.format("%s.%s", getIntegratedDbNameForJoinQuery(dbName, joinKey), getIntegratedTableNameForJoinQuery(tableName, hiveQuery));
     }
 

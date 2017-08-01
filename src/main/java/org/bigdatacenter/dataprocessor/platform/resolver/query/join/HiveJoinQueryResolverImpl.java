@@ -3,10 +3,10 @@ package org.bigdatacenter.dataprocessor.platform.resolver.query.join;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.ExtractionParameter;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.key.ParameterMapKey;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.query.HiveJoinParameter;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.query.join.map.key.column.value.ColumnKeyMapValue;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.HiveTask;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.creation.HiveCreationTask;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestInfo;
-import org.bigdatacenter.dataprocessor.platform.resolver.query.common.HiveQueryUtil;
 import org.bigdatacenter.dataprocessor.platform.resolver.query.join.builder.HiveJoinQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,15 +31,18 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
 
     @Override
     public List<HiveTask> buildHiveJoinTasksWithExtractionTasks(ExtractionParameter extractionParameter,
-                                                                Map<Integer/*Year*/, List<HiveJoinParameter>> hiveJoinParameterListMap
+                                                                Map<Integer/*Year*/, List<HiveJoinParameter>> hiveJoinParameterListMap,
+                                                                Map<Integer/*Year*/, List<HiveTask>> hiveTaskListMapForExtractionTask
     ) {
-        List<HiveTask> hiveTaskList = null;
+        final List<HiveTask> hiveTaskList = new ArrayList<>();
 
         //
         // TODO: 다음 3개의 CASE 중 수행할 작업을 판별한다.
         //
         final RequestInfo requestInfo = extractionParameter.getRequestInfo();
-        final Map<Integer/*Year*/, Map<String/*Column Name*/, List<String/*Table Name*/>>> columnKeyMap = getColumnKeyMap(extractionParameter.getParameterMap());
+        final Map<Integer/*Year*/, Map<String/*Column Name*/, List<ColumnKeyMapValue>>> yearKeyMap = getYearKeyMap(extractionParameter.getParameterMap());
+
+        logger.debug(String.format("%s - columnKeyMap: %s", currentThreadName, yearKeyMap));
 
         switch (requestInfo.getJoinCondition()) {
             case 1:
@@ -54,94 +57,91 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
         }
 
         try {
-            for (Integer year : columnKeyMap.keySet()) {
-                final Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMapValue = columnKeyMap.get(year);
+            for (Integer year : yearKeyMap.keySet()) {
+                final Map<String/*Column Name*/, List<ColumnKeyMapValue>> yearKeyMapValue = yearKeyMap.get(year);
                 final List<HiveJoinParameter> hiveJoinParameterList = hiveJoinParameterListMap.get(year);
-                final Integer joinTaskType = getJoinTaskType(columnKeyMapValue);
+                final Integer joinTaskType = getJoinTaskType(yearKeyMapValue);
+
+                logger.debug(String.format("%s - hiveJoinParameterList: %s", currentThreadName, hiveJoinParameterList));
+                logger.debug(String.format("%s - joinTaskType: %d", currentThreadName, joinTaskType));
 
                 switch (joinTaskType) {
                     case EXCLUSIVE_COLUMN_ZERO: // case 1: 모든 테이블에 있는 컬럼만 필터링 (No Join)
                         logger.info(String.format("%s - Join Task is EXCLUSIVE_COLUMN_ZERO", currentThreadName));
+                        hiveTaskList.addAll(hiveTaskListMapForExtractionTask.get(year));
                         break;
                     case EXCLUSIVE_COLUMN_ONE: // case 2: 모든 테이블에 있는 컬럼 + 특정 테이블에 있는 컬럼 (1개) 필터링
                         logger.info(String.format("%s - Join Task is EXCLUSIVE_COLUMN_ONE", currentThreadName));
-                        hiveTaskList = new ArrayList<>(hiveJoinQueryBuilder.buildHiveJoinQueryTasks(
-                                joinTaskType, requestInfo, hiveJoinParameterList, columnKeyMapValue));
+                        hiveTaskList.addAll(hiveJoinQueryBuilder.buildHiveJoinQueryTasks(
+                                joinTaskType, requestInfo, hiveJoinParameterList, yearKeyMapValue));
                         break;
                     case EXCLUSIVE_COLUMN_TWO_OR_MORE: // case 3: 모든 테이블에 있는 컬럼 + 특정 테이블에 있는 컬럼 (2개 이상) 필터링
                         logger.info(String.format("%s - Join Task is EXCLUSIVE_COLUMN_TWO_OR_MORE", currentThreadName));
-                        hiveTaskList = new ArrayList<>(hiveJoinQueryBuilder.buildHiveJoinQueryTasks(
-                                joinTaskType, requestInfo, hiveJoinParameterList, columnKeyMapValue));
+                        hiveTaskList.addAll(hiveJoinQueryBuilder.buildHiveJoinQueryTasks(
+                                joinTaskType, requestInfo, hiveJoinParameterList, yearKeyMapValue));
                         break;
                     default:
                         logger.error(String.format("%s - Invalid join operation option", currentThreadName));
                         throw new NullPointerException();
                 }
             }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            logger.error(String.format("%s - Exception occurs at buildHiveJoinTasksWithExtractionTasks: %s", currentThreadName, e.getMessage()));
-            throw new ArrayIndexOutOfBoundsException(e.getMessage());
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            throw new NullPointerException(String.format("%s - Exception occurs at buildHiveJoinTasksWithExtractionTasks: %s", currentThreadName, e.getMessage()));
         }
 
         return hiveTaskList;
     }
 
     @Override
-    public Map<Integer/*Year*/, Map<String/*Column Name*/, List<String/*Table Name*/>>> getColumnKeyMap(Map<ParameterMapKey, Map<String/*column*/, List<String>/*values*/>> parameterMap) {
-        Map<Integer/*Year*/, Map<String/*Column Name*/, List<String/*Table Name*/>>> columnKeyMap = new HashMap<>();
+    public Map<Integer/*Year*/, Map<String/*Column Name*/, List<ColumnKeyMapValue>>> getYearKeyMap(Map<ParameterMapKey, Map<String/*column*/, List<String>/*values*/>> parameterMap) {
+        Map<Integer/*Year*/, Map<String/*Column Name*/, List<ColumnKeyMapValue>>> yearKeyMap = new HashMap<>();
 
         for (ParameterMapKey parameterMapKey : parameterMap.keySet()) {
             final Map<String/*column*/, List<String>/*values*/> parameterMapValue = parameterMap.get(parameterMapKey);
-            final String dbAndTableName = HiveQueryUtil.getDbAndTableNameForQuery(parameterMapKey.getDbName(), parameterMapKey.getTableName());
+            final String dbName = parameterMapKey.getDbName();
+            final String tableName = parameterMapKey.getTableName();
             final Integer year = parameterMapKey.getYear();
+
+            final ColumnKeyMapValue columnKeyMapValue = new ColumnKeyMapValue(dbName, tableName);
 
             if (parameterMapValue != null) {
                 for (String columnName : parameterMapValue.keySet()) {
-                    Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMapValue = columnKeyMap.get(year);
-                    List<String> tableNameList;
+                    Map<String/*Column Name*/, List<ColumnKeyMapValue>> yearKeyMapValue = yearKeyMap.get(year);
+                    List<ColumnKeyMapValue> columnKeyMapValueList;
 
-                    if (columnKeyMapValue == null) {
-                        columnKeyMapValue = new HashMap<>();
-                        tableNameList = new ArrayList<>();
+                    if (yearKeyMapValue == null) {
+                        yearKeyMapValue = new HashMap<>();
+                        columnKeyMapValueList = new ArrayList<>();
 
-                        tableNameList.add(dbAndTableName);
-                        columnKeyMapValue.put(columnName, tableNameList);
-                        columnKeyMap.put(year, columnKeyMapValue);
+                        columnKeyMapValueList.add(columnKeyMapValue);
+                        yearKeyMapValue.put(columnName, columnKeyMapValueList);
+                        yearKeyMap.put(year, yearKeyMapValue);
                     } else {
-                        tableNameList = columnKeyMapValue.get(columnName);
+                        columnKeyMapValueList = yearKeyMapValue.get(columnName);
 
                         //noinspection Duplicates
-                        if (tableNameList == null) {
-                            tableNameList = new ArrayList<>();
+                        if (columnKeyMapValueList == null) {
+                            columnKeyMapValueList = new ArrayList<>();
 
-                            tableNameList.add(dbAndTableName);
-                            columnKeyMapValue.put(columnName, tableNameList);
+                            columnKeyMapValueList.add(columnKeyMapValue);
+                            yearKeyMapValue.put(columnName, columnKeyMapValueList);
                         } else {
-                            tableNameList.add(dbAndTableName);
+                            columnKeyMapValueList.add(columnKeyMapValue);
                         }
                     }
                 }
             }
         }
 
-        return columnKeyMap;
+        return yearKeyMap;
     }
 
     @Override
-    public Integer getJoinTaskType(Map<String/*Column Name*/, List<String/*Table Name*/>> columnKeyMap) {
+    public Integer getJoinTaskType(Map<String/*Column Name*/, List<ColumnKeyMapValue>> columnKeyMap) {
         Integer joinTaskType;
-        Map<String/*Table name*/, Boolean> validationMapForBeingExclusiveColumns = new HashMap<>();
 
-        for (String columnName : columnKeyMap.keySet()) {
-            List<String> tableNameList = columnKeyMap.get(columnName);
-            if (tableNameList.size() == 1) {
-                String exclusiveTableName = tableNameList.get(0);
-                if (validationMapForBeingExclusiveColumns.get(exclusiveTableName) == null)
-                    validationMapForBeingExclusiveColumns.put(exclusiveTableName, Boolean.TRUE);
-            }
-        }
-
-        switch (validationMapForBeingExclusiveColumns.size()) {
+        switch (findExclusiveColumns(columnKeyMap)) {
             case 0:
                 joinTaskType = HiveJoinQueryResolver.EXCLUSIVE_COLUMN_ZERO;
                 break;
@@ -155,29 +155,40 @@ public class HiveJoinQueryResolverImpl implements HiveJoinQueryResolver {
         return joinTaskType;
     }
 
+    private Integer findExclusiveColumns(Map<String/*Column Name*/, List<ColumnKeyMapValue>> columnKeyMap) {
+        Map<ColumnKeyMapValue, Boolean> validationMapForBeingExclusiveColumns = new HashMap<>();
+
+        for (String columnName : columnKeyMap.keySet()) {
+            List<ColumnKeyMapValue> columnKeyMapValueList = columnKeyMap.get(columnName);
+            if (columnKeyMapValueList.size() == 1) {
+                ColumnKeyMapValue exclusiveColumnKeyMapValue = columnKeyMapValueList.get(0);
+                if (validationMapForBeingExclusiveColumns.get(exclusiveColumnKeyMapValue) == null)
+                    validationMapForBeingExclusiveColumns.put(exclusiveColumnKeyMapValue, Boolean.TRUE);
+            }
+        }
+
+        return validationMapForBeingExclusiveColumns.size();
+    }
+
     @Override
     public HiveTask buildHiveJoinTaskWithOutExtractionTask(HiveJoinParameter hiveJoinParameter,
                                                            HiveCreationTask hiveCreationTask, Integer year,
                                                            Map<Integer/*Year*/, List<HiveJoinParameter>> hiveJoinParameterListMap
     ) {
-        try {
-            List<HiveJoinParameter> hiveJoinParameterList = hiveJoinParameterListMap.get(year);
-            //noinspection Duplicates
-            if (hiveJoinParameterList == null) {
-                hiveJoinParameterList = new ArrayList<>();
-                hiveJoinParameterList.add(hiveJoinParameter);
-                hiveJoinParameterListMap.put(year, hiveJoinParameterList);
-            } else {
-                hiveJoinParameterList.add(hiveJoinParameter);
-            }
+        List<HiveJoinParameter> hiveJoinParameterList = hiveJoinParameterListMap.get(year);
 
-            if (hiveJoinParameter.getIsCreatable())
-                return new HiveTask(hiveCreationTask, null);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            logger.error(String.format("%s - Exception occurs at buildHiveJoinTaskWithOutExtractionTask: %s", currentThreadName, e.getMessage()));
-            throw new ArrayIndexOutOfBoundsException(e.getMessage());
+        //noinspection Duplicates
+        if (hiveJoinParameterList == null) {
+            hiveJoinParameterList = new ArrayList<>();
+            hiveJoinParameterList.add(hiveJoinParameter);
+            hiveJoinParameterListMap.put(year, hiveJoinParameterList);
+        } else {
+            hiveJoinParameterList.add(hiveJoinParameter);
         }
 
-        return null;
+        if (!hiveJoinParameter.getIsCreatable())
+            return null;
+
+        return new HiveTask(hiveCreationTask, null);
     }
 }
