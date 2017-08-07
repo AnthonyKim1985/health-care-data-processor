@@ -1,10 +1,10 @@
 package org.bigdatacenter.dataprocessor.platform.api;
 
 import org.bigdatacenter.dataprocessor.common.DataProcessorUtil;
-import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.ExtractionParameter;
-import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.ExtractionRequest;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.parameter.ExtractionParameter;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.request.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.persistence.metadb.MetadbMapper;
-import org.bigdatacenter.dataprocessor.platform.resolver.query.HiveQueryResolver;
+import org.bigdatacenter.dataprocessor.platform.resolver.query_old.HiveQueryResolver;
 import org.bigdatacenter.dataprocessor.platform.service.metadb.MetadbService;
 import org.bigdatacenter.dataprocessor.springboot.config.RabbitMQConfig;
 import org.bigdatacenter.dataprocessor.springboot.exception.RestException;

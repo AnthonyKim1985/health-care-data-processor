@@ -3,10 +3,9 @@ package org.bigdatacenter.dataprocessor.platform.service.metadb;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.common.FtpInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaColumnInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaDatabaseInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaRelationIndicatorWithColumn;
+import org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaSelectedColumnInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaTableInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestFilterInfo;
-import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestIndicatorInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestInfo;
 import org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestYearInfo;
 import org.bigdatacenter.dataprocessor.platform.persistence.metadb.MetadbMapper;
@@ -36,11 +35,6 @@ public class MetadbServiceImpl implements MetadbService {
     @Override
     public List<RequestYearInfo> findRequestYears(Integer dataSetUID) {
         return metadbMapper.readRequestYears(dataSetUID);
-    }
-
-    @Override
-    public List<RequestIndicatorInfo> findRequestIndicators(Integer dataSetUID) {
-        return metadbMapper.readRequestIndicators(dataSetUID);
     }
 
     @Override
@@ -79,13 +73,8 @@ public class MetadbServiceImpl implements MetadbService {
     }
 
     @Override
-    public List<MetaColumnInfo> findMetaColumns(Integer eclIdx) {
-        return metadbMapper.readMetaColumns1(eclIdx);
-    }
-
-    @Override
     public List<MetaColumnInfo> findMetaColumns(Integer edlIdx, String eclRef, Integer eclYear) {
-        return metadbMapper.readMetaColumns2(edlIdx, eclRef, eclYear);
+        return metadbMapper.readMetaColumns(edlIdx, eclRef, eclYear);
     }
 
     @Override
@@ -94,13 +83,8 @@ public class MetadbServiceImpl implements MetadbService {
     }
 
     @Override
-    public List<MetaRelationIndicatorWithColumn> findMetaRelationIndicatorWithColumn(Integer eilIdx) {
-        return metadbMapper.readMetaRelationIndicatorWithColumn(eilIdx);
-    }
-
-    @Override
-    public List<MetaColumnInfo> findMetaColumnsForIndicatorHeader(Integer eilIdx) {
-        return metadbMapper.readMetaColumnsForIndicatorHeader(eilIdx);
+    public List<MetaSelectedColumnInfo> findMetaSelectedColumns(Integer dataSetUID, String etlEngName) {
+        return metadbMapper.readMetaSelectedColumns(dataSetUID, etlEngName);
     }
 
     @Override

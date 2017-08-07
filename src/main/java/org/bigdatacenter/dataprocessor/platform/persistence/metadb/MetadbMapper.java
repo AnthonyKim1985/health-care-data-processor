@@ -26,7 +26,6 @@ public interface MetadbMapper {
     RequestInfo readRequest(@Param("dataSetUID") Integer dataSetUID);
     List<RequestFilterInfo> readRequestFilters(@Param("dataSetUID") Integer dataSetUID);
     List<RequestYearInfo> readRequestYears(@Param("dataSetUID") Integer dataSetUID);
-    List<RequestIndicatorInfo> readRequestIndicators(@Param("dataSetUID") Integer dataSetUID);
     int updateProcessState(@Param("dataSetUID") Integer dataSetUID, @Param("processState") Integer processState);
     int updateJobStartTime(@Param("dataSetUID") Integer dataSetUID, @Param("jobStartTime") String jobStartTime);
     int updateJobEndTime(@Param("dataSetUID") Integer dataSetUID, @Param("jobEndTime") String jobEndTime);
@@ -39,12 +38,9 @@ public interface MetadbMapper {
     MetaDatabaseInfo readMetaDatabase(@Param("edl_idx") Integer edlIdx);
     MetaTableInfo readMetaTable(@Param("etl_idx") Integer etlIdx);
     List<String> readMetaTableNames(@Param("edl_idx") Integer edlIdx, @Param("tb_year") Integer tbYear);
-    List<MetaColumnInfo> readMetaColumns1(@Param("ecl_idx") Integer eclIdx);
-    List<MetaColumnInfo> readMetaColumns2(@Param("edl_idx") Integer edlIdx, @Param("ecl_ref") String eclRef, @Param("ecl_year") Integer eclYear);
+    List<MetaColumnInfo> readMetaColumns(@Param("edl_idx") Integer edlIdx, @Param("ecl_ref") String eclRef, @Param("ecl_year") Integer eclYear);
     List<String> readEngColumnNames(@Param("etl_eng_name") String etlEngName);
-    List<MetaRelationIndicatorWithColumn> readMetaRelationIndicatorWithColumn(@Param("eil_idx") Integer eilIdx);
-    List<MetaColumnInfo> readMetaColumnsForIndicatorHeader(@Param("eil_idx") Integer eilIdx);
-
+    List<MetaSelectedColumnInfo> readMetaSelectedColumns(@Param("dataSetUID") Integer dataSetUID, @Param("etl_eng_name") String etlEngName);
 
 
     //

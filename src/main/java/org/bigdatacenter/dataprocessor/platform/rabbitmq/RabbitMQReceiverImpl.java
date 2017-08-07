@@ -1,6 +1,6 @@
 package org.bigdatacenter.dataprocessor.platform.rabbitmq;
 
-import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.ExtractionRequest;
+import org.bigdatacenter.dataprocessor.platform.domain.hive.extraction.request.ExtractionRequest;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.HiveTask;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.creation.HiveCreationTask;
 import org.bigdatacenter.dataprocessor.platform.domain.hive.task.extraction.HiveExtractionTask;

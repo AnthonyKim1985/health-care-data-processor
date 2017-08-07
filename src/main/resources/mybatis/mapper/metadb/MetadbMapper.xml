@@ -19,12 +19,6 @@
         SELECT * FROM health_care_ui.tr_dataset_year WHERE dataSetUID = #{dataSetUID};
     </select>
 
-    <!-- List<RequestIndicatorInfo> readRequestIndicators(@Param("dataSetUID") Integer dataSetUID) -->
-    <select id="readRequestIndicators"
-            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.request.RequestIndicatorInfo">
-        SELECT * FROM health_care_ui.tr_dataset_indicator WHERE dataSetUID = #{dataSetUID};
-    </select>
-
     <!-- int updateProcessState(@Param("dataSetUID") Integer dataSetUID, @Param("processState") Integer processState) -->
     <update id="updateProcessState">
         UPDATE health_care_ui.tr_dataset_list SET processState = #{processState} WHERE dataSetUID = #{dataSetUID};
@@ -65,26 +59,10 @@
         SELECT etl_eng_name FROM health_care_ui.chu_tb_list WHERE edl_idx = #{edl_idx} AND tb_year = #{tb_year};
     </select>
 
-    <!-- List<MetaColumnInfo> readMetaColumns1(@Param("ecl_idx") Integer eclIdx) -->
-    <select id="readMetaColumns1" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaColumnInfo">
-        SELECT * FROM health_care_ui.chu_col_list WHERE ecl_idx = #{ecl_idx};
-    </select>
-
-    <!-- List<MetaColumnInfo> readMetaColumns2(@Param("edl_idx") Integer edlIdx, @Param("ecl_ref") String eclRef, @Param("ecl_year") Integer eclYear) -->
-    <select id="readMetaColumns2"
+    <!-- List<MetaColumnInfo> readMetaColumns(@Param("edl_idx") Integer edlIdx, @Param("ecl_ref") String eclRef, @Param("ecl_year") Integer eclYear) -->
+    <select id="readMetaColumns"
             resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaColumnInfo">
         SELECT * FROM health_care_ui.chu_col_list_ref WHERE edl_idx = #{edl_idx} AND ecl_ref = #{ecl_ref} AND ecl_year = #{ecl_year};
-    </select>
-
-    <!-- List<MetaColumnInfo> readMetaColumnsForIndicatorHeader(@Param("eil_idx") Integer eilIdx) -->
-    <select id="readMetaColumnsForIndicatorHeader" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaColumnInfo">
-        SELECT col.* FROM health_care_ui.chu_col_list_ref col INNER JOIN health_care_ui.chu_indicator_column_relation ind ON col.ecl_idx = ind.ecl_idx WHERE ind.eil_idx = #{eil_idx} ORDER BY col.ecl_idx ASC;
-    </select>
-
-    <!-- List<MetaRelationIndicatorWithColumn> readMetaRelationIndicatorWithColumn(@Param("eil_idx") Integer eilIdx) -->
-    <select id="readMetaRelationIndicatorWithColumn"
-            resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaRelationIndicatorWithColumn">
-        SELECT * FROM health_care_ui.chu_indicator_column_relation WHERE eil_idx = #{eil_idx};
     </select>
 
     <!-- List<String> readEngColumnNames(@Param("etl_eng_name") String etlEngName) -->
@@ -92,6 +70,10 @@
         SELECT DISTINCT ecl_eng_name FROM health_care_ui.chu_col_list WHERE etl_idx=(SELECT etl_idx FROM health_care_ui.chu_tb_list WHERE etl_eng_name=#{etl_eng_name});
     </select>
 
+    <!-- List<MetaSelectedColumnInfo> readMetaSelectedColumns(@Param("dataSetUID") Integer dataSetUID, @Param("etl_eng_name") String etlEngName) -->
+    <select id="readMetaSelectedColumns" resultType="org.bigdatacenter.dataprocessor.platform.domain.metadb.meta.MetaSelectedColumnInfo">
+        SELECT * FROM tr_dataset_select WHERE dataSetUID = #{dataSetUID} AND etl_eng_name = #{etl_eng_name};
+    </select>
 
 
 

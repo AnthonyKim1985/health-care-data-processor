@@ -45,6 +45,5 @@ dependencies {
     }
     compile('org.apache.hadoop:hadoop-common:2.6.4') {
         exclude group: 'org.slf4j', module: 'slf4j-log4j12'
-
     }
 }
